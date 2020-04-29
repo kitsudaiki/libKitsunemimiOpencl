@@ -1,15 +1,9 @@
-include(../defaults.pri)
-
+TEMPLATE = subdirs
+CONFIG += ordered
 QT -= qt core gui
+CONFIG += c++14
 
-CONFIG   -= app_bundle
-CONFIG += c++14 console
+SUBDIRS = \
+    functional_tests
 
-LIBS +=  -lOpenCL
-
-INCLUDEPATH += $$PWD
-
-LIBS += -L../src -lKitsunemimiOpencl
-
-SOURCES += \
-    main.cpp
+tests.depends = src
