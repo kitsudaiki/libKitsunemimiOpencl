@@ -1,5 +1,7 @@
 #include <libKitsunemimiOpencl/opencl.h>
 
+#include <libKitsunemimiPersistence/logger/logger.h>
+
 namespace Kitsunemimi
 {
 namespace Opencl
@@ -20,10 +22,11 @@ Opencl::init()
         cl::Platform::get(&m_platform);
         if(m_platform.empty())
         {
-            std::cerr << "OpenCL platforms not found." << std::endl;
-            return 1;
+            LOG_ERROR("OpenCL platforms not found.");
+            return false;
         }
-        std::cout<<"number of platforms: "<<m_platform.size()<<std::endl;
+
+        LOG_INFO("number of OpenCL platforms: " + std::to_string(m_platform.size()));
 
         // Get first available GPU device which supports double precision.
         for(auto p = m_platform.begin(); m_device.empty() && p != m_platform.end(); p++)
@@ -31,7 +34,7 @@ Opencl::init()
             std::vector<cl::Device> pldev;
 
             p->getDevices(CL_DEVICE_TYPE_ALL, &pldev);
-            std::cout<<"number of devices: "<<pldev.size()<<std::endl;
+            LOG_INFO("number of OpenCL devices: " + std::to_string(pldev.size()));
 
             for(auto d = pldev.begin(); m_device.empty() && d != pldev.end(); d++)
             {
@@ -55,19 +58,19 @@ Opencl::init()
 
         if(m_device.empty())
         {
-            //std::cerr << "GPUs with double precision not found." << std::endl;
-            std::cerr << "No device found." << std::endl;
-            return 1;
+            LOG_ERROR("No OpenCL device found.");
+            return false;
         }
 
-        std::cout << m_device[0].getInfo<CL_DEVICE_NAME>() << std::endl;
+        LOG_INFO("choosen OpenCL device: " + m_device[0].getInfo<CL_DEVICE_NAME>());
     }
     catch(const cl::Error &err)
     {
-        std::cerr
-            << "OpenCL error: "
-            << err.what() << "(" << err.err() << ")"
-            << std::endl;
+        LOG_ERROR("OpenCL error: "
+                  + std::string(err.what())
+                  + "("
+                  + std::to_string(err.err())
+                  + ")");
         return false;
     }
 
@@ -101,11 +104,9 @@ Opencl::run(const std::string &kernelCode)
         }
         catch(const cl::Error&)
         {
-            std::cerr
-                << "OpenCL compilation error" << std::endl
-                << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_device[0])
-                << std::endl;
-            return 1;
+            LOG_ERROR("OpenCL compilation error\n    "
+                      + program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_device[0]));
+            return false;
         }
 
         cl::Kernel add(program, "add");
@@ -154,10 +155,11 @@ Opencl::run(const std::string &kernelCode)
     }
     catch(const cl::Error &err)
     {
-        std::cerr
-            << "OpenCL error: "
-            << err.what() << "(" << err.err() << ")"
-            << std::endl;
+        LOG_ERROR("OpenCL error: "
+                  + std::string(err.what())
+                  + "("
+                  + std::to_string(err.err())
+                  + ")");
         return false;
     }
 
