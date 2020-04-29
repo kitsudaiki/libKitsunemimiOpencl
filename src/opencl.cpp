@@ -17,23 +17,23 @@ Opencl::init()
     try
     {
         // Get list of OpenCL platforms.
-        cl::Platform::get(&platform);
-        if(platform.empty())
+        cl::Platform::get(&m_platform);
+        if(m_platform.empty())
         {
             std::cerr << "OpenCL platforms not found." << std::endl;
             return 1;
         }
-        std::cout<<"number of platforms: "<<platform.size()<<std::endl;
+        std::cout<<"number of platforms: "<<m_platform.size()<<std::endl;
 
         // Get first available GPU device which supports double precision.
-        for(auto p = platform.begin(); device.empty() && p != platform.end(); p++)
+        for(auto p = m_platform.begin(); m_device.empty() && p != m_platform.end(); p++)
         {
             std::vector<cl::Device> pldev;
 
             p->getDevices(CL_DEVICE_TYPE_ALL, &pldev);
             std::cout<<"number of devices: "<<pldev.size()<<std::endl;
 
-            for(auto d = pldev.begin(); device.empty() && d != pldev.end(); d++)
+            for(auto d = pldev.begin(); m_device.empty() && d != pldev.end(); d++)
             {
                 if(!d->getInfo<CL_DEVICE_AVAILABLE>()) {
                     continue;
@@ -48,19 +48,19 @@ Opencl::init()
                 //     continue;
                 //}
 
-                device.push_back(*d);
-                context = cl::Context(device);
+                m_device.push_back(*d);
+                m_context = cl::Context(m_device);
             }
         }
 
-        if(device.empty())
+        if(m_device.empty())
         {
             //std::cerr << "GPUs with double precision not found." << std::endl;
             std::cerr << "No device found." << std::endl;
             return 1;
         }
 
-        std::cout << device[0].getInfo<CL_DEVICE_NAME>() << std::endl;
+        std::cout << m_device[0].getInfo<CL_DEVICE_NAME>() << std::endl;
     }
     catch(const cl::Error &err)
     {
@@ -87,23 +87,23 @@ Opencl::run(const std::string &kernelCode)
     try
     {
         // Create command queue.
-        cl::CommandQueue queue(context, device[0]);
+        cl::CommandQueue queue(m_context, m_device[0]);
 
         // Compile OpenCL program for found device.
         const cl::Program::Sources source = cl::Program::Sources(1,
                                                                  std::make_pair(kernelCode.c_str(),
                                                                                 kernelCode.size()));
-        cl::Program program(context, source);
+        cl::Program program(m_context, source);
 
         try
         {
-            program.build(device);
+            program.build(m_device);
         }
         catch(const cl::Error&)
         {
             std::cerr
                 << "OpenCL compilation error" << std::endl
-                << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device[0])
+                << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_device[0])
                 << std::endl;
             return 1;
         }
@@ -116,17 +116,17 @@ Opencl::run(const std::string &kernelCode)
         std::vector<float> c(N);
 
         // Allocate device buffers and transfer input data to device.
-        cl::Buffer A(context,
+        cl::Buffer A(m_context,
                      CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                      a.size() * sizeof(float),
                      a.data());
 
-        cl::Buffer B(context,
+        cl::Buffer B(m_context,
                      CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                      b.size() * sizeof(float),
                      b.data());
 
-        cl::Buffer C(context,
+        cl::Buffer C(m_context,
                      CL_MEM_READ_WRITE,
                      c.size() * sizeof(float));
 

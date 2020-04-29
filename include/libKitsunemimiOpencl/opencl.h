@@ -22,9 +22,9 @@ public:
     bool run(const std::string &kernelCode);
 
 private:
-    std::vector<cl::Platform> platform;
-    cl::Context context;
-    std::vector<cl::Device> device;
+    std::vector<cl::Platform> m_platform;
+    std::vector<cl::Device> m_device;
+    cl::Context m_context;
 };
 
 }
