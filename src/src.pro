@@ -15,7 +15,8 @@ LIBS += -L../../libKitsunemimiPersistence/src/debug -lKitsunemimiPersistence
 LIBS += -L../../libKitsunemimiPersistence/src/release -lKitsunemimiPersistence
 INCLUDEPATH += ../../libKitsunemimiPersistence/include
 
-LIBS +=  -lOpenCL
+LIBS +=  -lOpenCL -lboost_filesystem -lboost_system
+
 
 INCLUDEPATH += $$PWD \
                $$PWD/../include
