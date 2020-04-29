@@ -12,7 +12,7 @@ int main()
 
     const size_t N = 1 << 20;
 
-    // Compute c = a + b.
+    // example kernel for task: c = a + b.
     const std::string kernelCode =
         "kernel void add(\n"
         "       ulong n,\n"
@@ -29,34 +29,43 @@ int main()
 
     Kitsunemimi::Opencl::Opencl ocl;
 
+    // create config-object
     Kitsunemimi::Opencl::OpenClConfig config;
     config.kernelCode = kernelCode;
     config.kernelName = "add";
 
+    // create data-object
     Kitsunemimi::Opencl::OpenClData data;
     data.range = N;
 
-    data.inputBuffer.push_back(Kitsunemimi::DataBuffer((N / 4096) + 1));
-    data.inputBuffer.push_back(Kitsunemimi::DataBuffer((N / 4096) + 1));
+    // init buffer
+    const uint32_t numberOfBlocks = ((N * sizeof(float)) / 4096) + 1;
+    data.inputBuffer.push_back(Kitsunemimi::DataBuffer(numberOfBlocks));
+    data.inputBuffer.push_back(Kitsunemimi::DataBuffer(numberOfBlocks));
     Kitsunemimi::allocateBlocks_DataBuffer(data.outputBuffer, (N / 4096) + 1);
+
+    // set buffer-position
+    data.inputBuffer[0].bufferPosition = N;
+    data.inputBuffer[1].bufferPosition = N;
     data.outputBuffer.bufferPosition = N;
 
-    const float a = 1;
-    const float b = 2;
+    // convert pointer
+    float* a = static_cast<float*>(data.inputBuffer[0].data);
+    float* b = static_cast<float*>(data.inputBuffer[1].data);
 
+    // write intput dat into buffer
     for(uint32_t i = 0; i < N; i++)
     {
-        Kitsunemimi::addObject_DataBuffer(data.inputBuffer[0], &a);
-        Kitsunemimi::addObject_DataBuffer(data.inputBuffer[1], &b);
+        a[i] = 1.0f;
+        b[i] = 2.0f;
     }
 
-    assert(data.inputBuffer[0].bufferPosition == N * sizeof(float));
-    assert(data.inputBuffer[1].bufferPosition == N * sizeof(float));
-
+    // run
     if(ocl.init(config)) {
         ocl.run(data);
     }
 
+    // check result
     float* outputValues = static_cast<float*>(data.outputBuffer.data);
     // Should get '3' here.
     std::cout << outputValues[42] << std::endl;
