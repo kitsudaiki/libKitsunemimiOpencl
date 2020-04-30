@@ -75,37 +75,47 @@ Opencl::run(OpenClData &data)
 {
     uint32_t argCounter = 0;
 
-    m_kernel.setArg(argCounter, static_cast<cl_ulong>(data.range));
-    argCounter++;
-
+    // send input to device
     for(uint64_t i = 0; i < data.inputBuffer.size(); i++)
     {
-        cl::Buffer input(m_context,
-                         CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-                         data.inputBuffer.at(i).bufferPosition,
-                         data.inputBuffer.at(i).data);
+        const cl::Buffer input(m_context,
+                               CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+                               data.inputBuffer.at(i).buffer.bufferPosition,
+                               data.inputBuffer.at(i).buffer.data);
         m_kernel.setArg(argCounter, input);
+        argCounter++;
+
+        m_kernel.setArg(argCounter, static_cast<cl_ulong>(data.inputBuffer.at(i).numberOfObjects));
         argCounter++;
     }
 
-    cl::Buffer output(m_context,
-                      CL_MEM_READ_WRITE,
-                      data.outputBuffer.bufferPosition);
+    // register output on device
+     cl::Buffer output(m_context,
+                            CL_MEM_READ_WRITE,
+                            data.outputBuffer.buffer.bufferPosition);
     m_kernel.setArg(argCounter, output);
     argCounter++;
 
-    // launch kernel on the compute device.
+    // convert ranges
+    const cl::NDRange globalRange = cl::NDRange(data.numberOfWg.x * data.threadsPerWg.x,
+                                                data.numberOfWg.y * data.threadsPerWg.y,
+                                                data.numberOfWg.z * data.threadsPerWg.z);
+    const cl::NDRange localRange = cl::NDRange(data.threadsPerWg.x,
+                                               data.threadsPerWg.y,
+                                               data.threadsPerWg.z);
+
+    // launch kernel on the device
     m_queue.enqueueNDRangeKernel(m_kernel,
                                  cl::NullRange,
-                                 data.range,
-                                 cl::NullRange);
+                                 globalRange,
+                                 localRange);
 
-    // Get result back to host.
+    // copy result back to host
     m_queue.enqueueReadBuffer(output,
                               CL_TRUE,
                               0,
-                              data.outputBuffer.bufferPosition,
-                              data.outputBuffer.data);
+                              data.outputBuffer.buffer.bufferPosition,
+                              data.outputBuffer.buffer.data);
 }
 
 /**

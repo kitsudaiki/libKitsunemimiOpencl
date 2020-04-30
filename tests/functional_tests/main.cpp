@@ -15,14 +15,15 @@ int main()
     // example kernel for task: c = a + b.
     const std::string kernelCode =
         "kernel void add(\n"
-        "       ulong n,\n"
-        "       global const float *a,\n"
-        "       global const float *b,\n"
-        "       global float *c\n"
+        "       global const float* a,\n"
+        "       ulong n1,\n"
+        "       global const float* b,\n"
+        "       ulong n2,\n"
+        "       global float* c\n"
         "       )\n"
         "{\n"
         "    size_t i = get_global_id(0);\n"
-        "    if (i < n) {\n"
+        "    if (i < n1) {\n"
         "       c[i] = a[i] + b[i];\n"
         "    }\n"
         "}\n";
@@ -36,22 +37,37 @@ int main()
 
     // create data-object
     Kitsunemimi::Opencl::OpenClData data;
-    data.range = N;
+
+    data.numberOfWg.x = N;
+    data.threadsPerWg.x = 1;
 
     // init buffer
     const uint32_t numberOfBlocks = ((N * sizeof(float)) / 4096) + 1;
-    data.inputBuffer.push_back(Kitsunemimi::DataBuffer(numberOfBlocks));
-    data.inputBuffer.push_back(Kitsunemimi::DataBuffer(numberOfBlocks));
-    Kitsunemimi::allocateBlocks_DataBuffer(data.outputBuffer, (N / 4096) + 1);
 
-    // set buffer-position
-    data.inputBuffer[0].bufferPosition = N;
-    data.inputBuffer[1].bufferPosition = N;
-    data.outputBuffer.bufferPosition = N;
+    // first buffer
+    Kitsunemimi::Opencl::WorkerBuffer first;
+    Kitsunemimi::allocateBlocks_DataBuffer(first.buffer, numberOfBlocks);
+    first.buffer.bufferPosition = N * sizeof(float);
+    first.numberOfObjects = N;
+    data.inputBuffer.push_back(first);
+
+    // second buffer
+    Kitsunemimi::Opencl::WorkerBuffer second;
+    Kitsunemimi::allocateBlocks_DataBuffer(second.buffer, numberOfBlocks);
+    second.buffer.bufferPosition = N * sizeof(float);
+    second.numberOfObjects = N;
+    data.inputBuffer.push_back(second);
+
+    // output buffer
+    Kitsunemimi::Opencl::WorkerBuffer output;
+    Kitsunemimi::allocateBlocks_DataBuffer(output.buffer, numberOfBlocks);
+    output.buffer.bufferPosition = N * sizeof(float);
+    output.numberOfObjects = N;
+    data.outputBuffer = output;
 
     // convert pointer
-    float* a = static_cast<float*>(data.inputBuffer[0].data);
-    float* b = static_cast<float*>(data.inputBuffer[1].data);
+    float* a = static_cast<float*>(data.inputBuffer[0].buffer.data);
+    float* b = static_cast<float*>(data.inputBuffer[1].buffer.data);
 
     // write intput dat into buffer
     for(uint32_t i = 0; i < N; i++)
@@ -66,7 +82,7 @@ int main()
     }
 
     // check result
-    float* outputValues = static_cast<float*>(data.outputBuffer.data);
+    float* outputValues = static_cast<float*>(data.outputBuffer.buffer.data);
     // Should get '3' here.
     std::cout << outputValues[42] << std::endl;
 }

@@ -22,6 +22,19 @@ enum DeviceType
     ALL_TYPE
 };
 
+struct WorkerDim
+{
+    uint32_t x = 1;
+    uint32_t y = 1;
+    uint32_t z = 1;
+};
+
+struct WorkerBuffer
+{
+    DataBuffer buffer;
+    uint64_t numberOfObjects;
+};
+
 struct OpenClConfig
 {
     std::string kernelCode = "";
@@ -34,9 +47,11 @@ struct OpenClConfig
 
 struct OpenClData
 {
-    uint64_t range = 0;
-    std::vector<DataBuffer> inputBuffer;
-    DataBuffer outputBuffer;
+    WorkerDim numberOfWg;
+    WorkerDim threadsPerWg;
+
+    std::vector<WorkerBuffer> inputBuffer;
+    WorkerBuffer outputBuffer;
 };
 
 class Opencl
