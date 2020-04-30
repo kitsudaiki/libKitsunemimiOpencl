@@ -46,7 +46,7 @@ public:
 
     bool init(const OpenClConfig &config);
 
-    bool run(OpenClData &data);
+    void run(OpenClData &data);
 
 private:
     std::vector<cl::Platform> m_platform;
