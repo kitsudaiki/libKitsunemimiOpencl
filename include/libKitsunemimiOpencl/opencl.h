@@ -31,7 +31,8 @@ struct WorkerDim
 
 struct WorkerBuffer
 {
-    DataBuffer buffer;
+    void* data = nullptr;
+    uint64_t numberOfBytes;
     uint64_t numberOfObjects;
 };
 

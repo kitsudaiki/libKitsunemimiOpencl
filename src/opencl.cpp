@@ -80,8 +80,8 @@ Opencl::run(OpenClData &data)
     {
         const cl::Buffer input(m_context,
                                CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-                               data.inputBuffer.at(i).buffer.bufferPosition,
-                               data.inputBuffer.at(i).buffer.data);
+                               data.inputBuffer.at(i).numberOfBytes,
+                               data.inputBuffer.at(i).data);
         m_kernel.setArg(argCounter, input);
         argCounter++;
 
@@ -92,7 +92,7 @@ Opencl::run(OpenClData &data)
     // register output on device
      cl::Buffer output(m_context,
                             CL_MEM_READ_WRITE,
-                            data.outputBuffer.buffer.bufferPosition);
+                            data.outputBuffer.numberOfBytes);
     m_kernel.setArg(argCounter, output);
     argCounter++;
 
@@ -114,8 +114,8 @@ Opencl::run(OpenClData &data)
     m_queue.enqueueReadBuffer(output,
                               CL_TRUE,
                               0,
-                              data.outputBuffer.buffer.bufferPosition,
-                              data.outputBuffer.buffer.data);
+                              data.outputBuffer.numberOfBytes,
+                              data.outputBuffer.data);
 }
 
 /**

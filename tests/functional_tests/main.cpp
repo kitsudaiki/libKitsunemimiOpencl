@@ -46,28 +46,28 @@ int main()
 
     // first buffer
     Kitsunemimi::Opencl::WorkerBuffer first;
-    Kitsunemimi::allocateBlocks_DataBuffer(first.buffer, numberOfBlocks);
-    first.buffer.bufferPosition = N * sizeof(float);
+    first.numberOfBytes = N * sizeof(float);
+    first.data = Kitsunemimi::alignedMalloc(4096, first.numberOfBytes);
     first.numberOfObjects = N;
     data.inputBuffer.push_back(first);
 
     // second buffer
     Kitsunemimi::Opencl::WorkerBuffer second;
-    Kitsunemimi::allocateBlocks_DataBuffer(second.buffer, numberOfBlocks);
-    second.buffer.bufferPosition = N * sizeof(float);
+    second.numberOfBytes = N * sizeof(float);
+    second.data = Kitsunemimi::alignedMalloc(4096, second.numberOfBytes);
     second.numberOfObjects = N;
     data.inputBuffer.push_back(second);
 
     // output buffer
     Kitsunemimi::Opencl::WorkerBuffer output;
-    Kitsunemimi::allocateBlocks_DataBuffer(output.buffer, numberOfBlocks);
-    output.buffer.bufferPosition = N * sizeof(float);
+    output.numberOfBytes = N * sizeof(float);
+    output.data = Kitsunemimi::alignedMalloc(4096, output.numberOfBytes);
     output.numberOfObjects = N;
     data.outputBuffer = output;
 
     // convert pointer
-    float* a = static_cast<float*>(data.inputBuffer[0].buffer.data);
-    float* b = static_cast<float*>(data.inputBuffer[1].buffer.data);
+    float* a = static_cast<float*>(data.inputBuffer[0].data);
+    float* b = static_cast<float*>(data.inputBuffer[1].data);
 
     // write intput dat into buffer
     for(uint32_t i = 0; i < N; i++)
@@ -82,7 +82,7 @@ int main()
     }
 
     // check result
-    float* outputValues = static_cast<float*>(data.outputBuffer.buffer.data);
+    float* outputValues = static_cast<float*>(data.outputBuffer.data);
     // Should get '3' here.
     std::cout << outputValues[42] << std::endl;
 }
