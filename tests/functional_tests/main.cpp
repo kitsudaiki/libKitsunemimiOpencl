@@ -42,30 +42,10 @@ int main()
     data.numberOfWg.x = N;
     data.threadsPerWg.x = 1;
 
-    // init buffer
-    const uint32_t numberOfBlocks = ((N * sizeof(float)) / 4096) + 1;
-
-    // first buffer
-    Kitsunemimi::Opencl::WorkerBuffer first;
-    first.numberOfBytes = N * sizeof(float);
-    first.data = Kitsunemimi::alignedMalloc(4096, first.numberOfBytes);
-    first.numberOfObjects = N;
-    data.buffer.push_back(first);
-
-    // second buffer
-    Kitsunemimi::Opencl::WorkerBuffer second;
-    second.numberOfBytes = N * sizeof(float);
-    second.data = Kitsunemimi::alignedMalloc(4096, second.numberOfBytes);
-    second.numberOfObjects = N;
-    data.buffer.push_back(second);
-
-    // output buffer
-    Kitsunemimi::Opencl::WorkerBuffer output;
-    output.numberOfBytes = N * sizeof(float);
-    output.data = Kitsunemimi::alignedMalloc(4096, output.numberOfBytes);
-    output.numberOfObjects = N;
-    output.isOutput = true;
-    data.buffer.push_back(output);
+    // init empty buffer
+    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float)));
+    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float)));
+    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float), true));
 
     // convert pointer
     float* a = static_cast<float*>(data.buffer[0].data);

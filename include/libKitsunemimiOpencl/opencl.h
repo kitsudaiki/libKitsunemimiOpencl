@@ -36,6 +36,18 @@ struct WorkerBuffer
     uint64_t numberOfObjects;
     bool isOutput = false;
     cl::Buffer clBuffer;
+
+    WorkerBuffer() {}
+
+    WorkerBuffer(const uint64_t numberOfObjects,
+                 const uint64_t objectSize,
+                 const bool isOutput = false)
+    {
+        this->numberOfBytes = numberOfObjects * objectSize;
+        this->data = Kitsunemimi::alignedMalloc(4096, numberOfBytes);
+        this->numberOfObjects = numberOfObjects;
+        this->isOutput = isOutput;
+    }
 };
 
 struct OpenClConfig
