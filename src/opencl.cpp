@@ -76,25 +76,31 @@ Opencl::run(OpenClData &data)
     uint32_t argCounter = 0;
 
     // send input to device
-    for(uint64_t i = 0; i < data.inputBuffer.size(); i++)
+    for(uint64_t i = 0; i < data.buffer.size(); i++)
     {
-        const cl::Buffer input(m_context,
-                               CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-                               data.inputBuffer.at(i).numberOfBytes,
-                               data.inputBuffer.at(i).data);
-        m_kernel.setArg(argCounter, input);
-        argCounter++;
+        WorkerBuffer buffer = data.buffer.at(i);
 
-        m_kernel.setArg(argCounter, static_cast<cl_ulong>(data.inputBuffer.at(i).numberOfObjects));
+        if(buffer.isOutput)
+        {
+            data.buffer[i].clBuffer = cl::Buffer(m_context,
+                                                 CL_MEM_READ_WRITE,
+                                                 buffer.numberOfBytes);
+            m_kernel.setArg(argCounter, data.buffer[i].clBuffer);
+            argCounter++;
+        }
+        else
+        {
+            data.buffer[i].clBuffer = cl::Buffer(m_context,
+                                                 CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+                                                 buffer.numberOfBytes,
+                                                 buffer.data);
+            m_kernel.setArg(argCounter, data.buffer[i].clBuffer);
+            argCounter++;
+        }
+
+        m_kernel.setArg(argCounter, static_cast<cl_ulong>(buffer.numberOfObjects));
         argCounter++;
     }
-
-    // register output on device
-     cl::Buffer output(m_context,
-                            CL_MEM_READ_WRITE,
-                            data.outputBuffer.numberOfBytes);
-    m_kernel.setArg(argCounter, output);
-    argCounter++;
 
     // convert ranges
     const cl::NDRange globalRange = cl::NDRange(data.numberOfWg.x * data.threadsPerWg.x,
@@ -110,12 +116,19 @@ Opencl::run(OpenClData &data)
                                  globalRange,
                                  localRange);
 
-    // copy result back to host
-    m_queue.enqueueReadBuffer(output,
-                              CL_TRUE,
-                              0,
-                              data.outputBuffer.numberOfBytes,
-                              data.outputBuffer.data);
+    // get output back from device
+    for(uint64_t i = 0; i < data.buffer.size(); i++)
+    {
+        if(data.buffer.at(i).isOutput)
+        {
+            // copy result back to host
+            m_queue.enqueueReadBuffer(data.buffer[i].clBuffer,
+                                      CL_TRUE,
+                                      0,
+                                      data.buffer[i].numberOfBytes,
+                                      data.buffer[i].data);
+        }
+    }
 }
 
 /**

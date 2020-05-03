@@ -34,6 +34,8 @@ struct WorkerBuffer
     void* data = nullptr;
     uint64_t numberOfBytes;
     uint64_t numberOfObjects;
+    bool isOutput = false;
+    cl::Buffer clBuffer;
 };
 
 struct OpenClConfig
@@ -51,8 +53,7 @@ struct OpenClData
     WorkerDim numberOfWg;
     WorkerDim threadsPerWg;
 
-    std::vector<WorkerBuffer> inputBuffer;
-    WorkerBuffer outputBuffer;
+    std::vector<WorkerBuffer> buffer;
 };
 
 class Opencl
