@@ -66,12 +66,12 @@ Opencl::init(const OpenClConfig &config)
 }
 
 /**
- * @brief run kernel with input
- *
- * @param data input-data for the run
+ * @brief Opencl::copyToDevice
+ * @param data
+ * @return
  */
-void
-Opencl::run(OpenClData &data)
+bool
+Opencl::copyToDevice(OpenClData &data)
 {
     uint32_t argCounter = 0;
 
@@ -102,6 +102,17 @@ Opencl::run(OpenClData &data)
         argCounter++;
     }
 
+    return true;
+}
+
+/**
+ * @brief run kernel with input
+ *
+ * @param data input-data for the run
+ */
+bool
+Opencl::run(OpenClData &data)
+{
     // convert ranges
     const cl::NDRange globalRange = cl::NDRange(data.numberOfWg.x * data.threadsPerWg.x,
                                                 data.numberOfWg.y * data.threadsPerWg.y,
@@ -116,6 +127,15 @@ Opencl::run(OpenClData &data)
                                  globalRange,
                                  localRange);
 
+    return true;
+}
+
+/**
+ * @brief Opencl::copyFromDevice
+ * @param data
+ */
+bool Opencl::copyFromDevice(OpenClData &data)
+{
     // get output back from device
     for(uint64_t i = 0; i < data.buffer.size(); i++)
     {
@@ -129,6 +149,8 @@ Opencl::run(OpenClData &data)
                                       data.buffer[i].data);
         }
     }
+
+    return true;
 }
 
 /**

@@ -22,7 +22,9 @@ public:
 
     bool init(const OpenClConfig &config);
 
-    void run(OpenClData &data);
+    bool copyToDevice(OpenClData &data);
+    bool run(OpenClData &data);
+    bool copyFromDevice(OpenClData &data);
 
     const std::string getVendor();
     uint64_t getLocalMemorySize();

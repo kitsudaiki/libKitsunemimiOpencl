@@ -10,7 +10,7 @@ int main()
 {
     Kitsunemimi::Persistence::initConsoleLogger(true);
 
-    const size_t N = 1 << 10;
+    const size_t N = 1 << 27;
 
     // example kernel for task: c = a + b.
     const std::string kernelCode =
@@ -23,14 +23,17 @@ int main()
         "       ulong out\n"
         "       )\n"
         "{\n"
+        "    __local float temp[512];\n"
         "    size_t globalId_x = get_global_id(0);\n"
         "    int localId_x = get_local_id(0);\n"
         "    size_t globalSize_x = get_global_size(0);\n"
         "    size_t globalSize_y = get_global_size(1);\n"
         "    \n"
         "    size_t gloablId = get_global_id(0) + get_global_size(0) * get_global_id(1);\n"
-        "    if (gloablId < n1) {\n"
-        "       c[gloablId] = a[gloablId] + b[gloablId];"
+        "    if (gloablId < n1)\n"
+        "    {\n"
+        "       temp[localId_x] = b[gloablId];\n"
+        "       c[gloablId] = a[gloablId] + temp[localId_x] + temp[localId_x] + temp[localId_x] + temp[localId_x] + temp[localId_x];"
         "    }\n"
         "}\n";
 
@@ -64,15 +67,38 @@ int main()
         b[i] = 2.0f;
     }
 
+    double duration = 0.0;
+    std::chrono::high_resolution_clock::time_point start;
+    std::chrono::high_resolution_clock::time_point end;
+
     // run
-    if(ocl.init(config)) {
+    if(ocl.init(config))
+    {
+        std::cout<<std::endl;
+
+        start = std::chrono::system_clock::now();
+        ocl.copyToDevice(data);
+        end = std::chrono::system_clock::now();
+        duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+        std::cout<<"copy to device: "<<std::to_string(duration / 1000.0)<<" us"<<std::endl;
+
+        start = std::chrono::system_clock::now();
         ocl.run(data);
+        end = std::chrono::system_clock::now();
+        duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+        std::cout<<"run: "<<std::to_string(duration / 1000.0)<<" us"<<std::endl;
+
+        start = std::chrono::system_clock::now();
+        ocl.copyFromDevice(data);
+        end = std::chrono::system_clock::now();
+        duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+        std::cout<<"copy from device: "<<std::to_string(duration / 1000.0)<<" us"<<std::endl;
     }
 
     // check result
     float* outputValues = static_cast<float*>(data.buffer[2].data);
     // Should get '3' here.
-    std::cout << outputValues[42] << std::endl;
+    //std::cout << outputValues[42] << std::endl;
     /*for(uint64_t i = 0; i < N; i++)
     {
         std::cout<<outputValues[i]<<std::endl;
