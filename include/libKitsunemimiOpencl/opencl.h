@@ -24,6 +24,13 @@ public:
 
     void run(OpenClData &data);
 
+    const std::string getVendor();
+    uint64_t getLocalMemorySize();
+    uint64_t getGlobalMemorySize_total();
+    uint64_t getGlobalMemorySize_available();
+
+
+
 private:
     std::vector<cl::Platform> m_platform;
     std::vector<cl::Device> m_device;

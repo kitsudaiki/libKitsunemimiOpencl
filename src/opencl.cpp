@@ -132,6 +132,76 @@ Opencl::run(OpenClData &data)
 }
 
 /**
+ * @brief Opencl::getVendor
+ * @return
+ */
+const std::string
+Opencl::getVendor()
+{
+    if(m_platform.size() == 0) {
+        return "";
+    }
+
+    std::string vendor;
+    m_platform.at(0).getInfo(CL_PLATFORM_VENDOR, &vendor);
+
+    return vendor;
+}
+
+/**
+ * @brief Opencl::getSizeOfLocalMemory
+ * @return
+ */
+uint64_t
+Opencl::getLocalMemorySize()
+{
+    if(m_device.size() == 0) {
+        return 0;
+    }
+
+    cl_ulong size = 0;
+    m_device.at(0).getInfo(CL_DEVICE_LOCAL_MEM_SIZE, &size);
+
+    return size;
+}
+
+/**
+ * @brief Opencl::getGlobalMemorySize
+ * @return
+ */
+uint64_t
+Opencl::getGlobalMemorySize_total()
+{
+    if(m_device.size() == 0) {
+        return 0;
+    }
+
+    cl_ulong size = 0;
+    m_device.at(0).getInfo(CL_DEVICE_GLOBAL_MEM_SIZE, &size);
+
+    return size;
+}
+
+/**
+ * @brief Opencl::getGlobalMemorySize_available
+ * @return
+ */
+uint64_t
+Opencl::getGlobalMemorySize_available()
+{
+    if(m_device.size() == 0
+            || getVendor() != "AMD")
+    {
+        return 0;
+    }
+
+    cl_ulong size = 0;
+    m_device.at(0).getInfo(CL_DEVICE_GLOBAL_FREE_MEMORY_AMD, &size);
+
+    return size;
+}
+
+/**
  * @brief collect all available devices
  *
  * @param config object with config-parameter

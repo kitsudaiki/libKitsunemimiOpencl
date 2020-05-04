@@ -67,4 +67,9 @@ int main()
     float* outputValues = static_cast<float*>(data.buffer[2].data);
     // Should get '3' here.
     std::cout << outputValues[42] << std::endl;
+
+    std::cout<<"vendor: "<<ocl.getVendor()<<std::endl;
+    std::cout<<"local-size: "<<ocl.getLocalMemorySize()<<std::endl;
+    std::cout<<"global-size: "<<ocl.getGlobalMemorySize_total()<<std::endl;
+    std::cout<<"global-available: "<<ocl.getGlobalMemorySize_available()<<std::endl;
 }
