@@ -14,12 +14,12 @@ int main()
 
     // example kernel for task: c = a + b.
     const std::string kernelCode =
-        "kernel void add(\n"
-        "       global const float* a,\n"
+        "__kernel void add(\n"
+        "       __global const float* a,\n"
         "       ulong n1,\n"
-        "       global const float* b,\n"
+        "       __global const float* b,\n"
         "       ulong n2,\n"
-        "       global float* c,\n"
+        "       __global float* c,\n"
         "       ulong out\n"
         "       )\n"
         "{\n"

@@ -22,7 +22,8 @@ INCLUDEPATH += $$PWD \
                $$PWD/../include
 
 HEADERS += \
-    ../include/libKitsunemimiOpencl/opencl.h
+    ../include/libKitsunemimiOpencl/opencl.h \
+    ../include/libKitsunemimiOpencl/opencl_items.h
 
 SOURCES += \
     opencl.cpp
