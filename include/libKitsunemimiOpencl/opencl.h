@@ -27,9 +27,14 @@ public:
     const std::string getVendor();
     uint64_t getLocalMemorySize();
     uint64_t getGlobalMemorySize_total();
-    uint64_t getGlobalMemorySize_available();
+    uint64_t getGlobalMemorySize_free();
+    uint64_t getMaxMemAllocSize();
 
+    uint64_t getMaxWorkGroupSize();
+    WorkerDim getMaxWorkItemSize();
+    uint64_t getMaxWorkItemDimension();
 
+    // also see: https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/clGetDeviceInfo.html
 
 private:
     std::vector<cl::Platform> m_platform;

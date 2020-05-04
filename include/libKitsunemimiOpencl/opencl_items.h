@@ -23,9 +23,9 @@ enum DeviceType
 
 struct WorkerDim
 {
-    uint32_t x = 1;
-    uint32_t y = 1;
-    uint32_t z = 1;
+    uint64_t x = 1;
+    uint64_t y = 1;
+    uint64_t z = 1;
 };
 
 struct WorkerBuffer

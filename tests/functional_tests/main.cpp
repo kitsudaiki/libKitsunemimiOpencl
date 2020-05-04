@@ -10,7 +10,7 @@ int main()
 {
     Kitsunemimi::Persistence::initConsoleLogger(true);
 
-    const size_t N = 1 << 20;
+    const size_t N = 1 << 10;
 
     // example kernel for task: c = a + b.
     const std::string kernelCode =
@@ -23,9 +23,14 @@ int main()
         "       ulong out\n"
         "       )\n"
         "{\n"
-        "    size_t i = get_global_id(0);\n"
-        "    if (i < n1) {\n"
-        "       c[i] = a[i] + b[i];\n"
+        "    size_t globalId_x = get_global_id(0);\n"
+        "    int localId_x = get_local_id(0);\n"
+        "    size_t globalSize_x = get_global_size(0);\n"
+        "    size_t globalSize_y = get_global_size(1);\n"
+        "    \n"
+        "    size_t gloablId = get_global_id(0) + get_global_size(0) * get_global_id(1);\n"
+        "    if (gloablId < n1) {\n"
+        "       c[gloablId] = a[gloablId] + b[gloablId];"
         "    }\n"
         "}\n";
 
@@ -39,8 +44,9 @@ int main()
     // create data-object
     Kitsunemimi::Opencl::OpenClData data;
 
-    data.numberOfWg.x = N;
-    data.threadsPerWg.x = 1;
+    data.numberOfWg.x = N / 1024;
+    data.numberOfWg.y = 2;
+    data.threadsPerWg.x = 512;
 
     // init empty buffer
     data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float)));
@@ -67,9 +73,22 @@ int main()
     float* outputValues = static_cast<float*>(data.buffer[2].data);
     // Should get '3' here.
     std::cout << outputValues[42] << std::endl;
+    /*for(uint64_t i = 0; i < N; i++)
+    {
+        std::cout<<outputValues[i]<<std::endl;
+    }*/
 
+    std::cout<<std::endl;
     std::cout<<"vendor: "<<ocl.getVendor()<<std::endl;
     std::cout<<"local-size: "<<ocl.getLocalMemorySize()<<std::endl;
     std::cout<<"global-size: "<<ocl.getGlobalMemorySize_total()<<std::endl;
-    std::cout<<"global-available: "<<ocl.getGlobalMemorySize_available()<<std::endl;
+    std::cout<<"global-available: "<<ocl.getGlobalMemorySize_free()<<std::endl;
+    std::cout<<"max Mem alloc size: "<<ocl.getMaxMemAllocSize()<<std::endl;
+    std::cout<<std::endl;
+    std::cout<<"max work-group-size: "<<ocl.getMaxWorkGroupSize()<<std::endl;
+    std::cout<<"max work-item-dimension: "<<ocl.getMaxWorkItemDimension()<<std::endl;
+    std::cout<<"max work-item-size (x): "<<ocl.getMaxWorkItemSize().x<<std::endl;
+    std::cout<<"max work-item-size (y): "<<ocl.getMaxWorkItemSize().y<<std::endl;
+    std::cout<<"max work-item-size (z): "<<ocl.getMaxWorkItemSize().z<<std::endl;
+
 }

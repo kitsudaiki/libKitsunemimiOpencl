@@ -187,7 +187,7 @@ Opencl::getGlobalMemorySize_total()
  * @return
  */
 uint64_t
-Opencl::getGlobalMemorySize_available()
+Opencl::getGlobalMemorySize_free()
 {
     if(m_device.size() == 0
             || getVendor() != "AMD")
@@ -197,6 +197,86 @@ Opencl::getGlobalMemorySize_available()
 
     cl_ulong size = 0;
     m_device.at(0).getInfo(CL_DEVICE_GLOBAL_FREE_MEMORY_AMD, &size);
+
+    return size;
+}
+
+/**
+ * @brief Opencl::getMaxMemAllocSize
+ * @return
+ */
+uint64_t
+Opencl::getMaxMemAllocSize()
+{
+    if(m_device.size() == 0) {
+        return 0;
+    }
+
+    cl_ulong size = 0;
+    m_device.at(0).getInfo(CL_DEVICE_MAX_MEM_ALLOC_SIZE, &size);
+
+    return size;
+}
+
+/**
+ * @brief Opencl::getMaxWorkgroupSize
+ * @return
+ */
+uint64_t
+Opencl::getMaxWorkGroupSize()
+{
+    if(m_device.size() == 0) {
+        return 0;
+    }
+
+    size_t size = 0;
+    m_device.at(0).getInfo(CL_DEVICE_MAX_WORK_GROUP_SIZE, &size);
+
+    return size;
+}
+
+/**
+ * @brief Opencl::getMaxThreadNumber
+ * @return
+ */
+WorkerDim
+Opencl::getMaxWorkItemSize()
+{
+    if(m_device.size() == 0) {
+        return WorkerDim();
+    }
+
+    size_t size[3];
+    m_device.at(0).getInfo(CL_DEVICE_MAX_WORK_ITEM_SIZES, &size);
+
+    uint64_t dimension = getMaxWorkItemDimension();
+    WorkerDim result;
+    if(dimension > 0) {
+        result.x = size[0];
+    }
+    if(dimension > 1) {
+        result.y = size[1];
+    }
+    if(dimension > 2) {
+        result.z = size[2];
+    }
+
+    return result;
+}
+
+/**
+ * @brief Opencl::getMaxTheadDimension
+ * @return
+ */
+uint64_t
+Opencl::getMaxWorkItemDimension()
+{
+    if(m_device.size() == 0) {
+        return 0;
+    }
+
+    cl_uint size = 0;
+    m_device.at(0).getInfo(CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, &size);
 
     return size;
 }
