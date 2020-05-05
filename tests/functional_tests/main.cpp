@@ -33,7 +33,7 @@ int main()
         "    if (gloablId < n1)\n"
         "    {\n"
         "       temp[localId_x] = b[gloablId];\n"
-        "       c[gloablId] = a[gloablId] + temp[localId_x] + temp[localId_x] + temp[localId_x] + temp[localId_x] + temp[localId_x];"
+        "       c[gloablId] = a[gloablId] + temp[localId_x];"
         "    }\n"
         "}\n";
 
@@ -80,25 +80,25 @@ int main()
         ocl.copyToDevice(data);
         end = std::chrono::system_clock::now();
         duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-        std::cout<<"copy to device: "<<std::to_string(duration / 1000.0)<<" us"<<std::endl;
+        std::cout<<"copy to device: "<<std::to_string(duration / 1000000.0)<<" ms"<<std::endl;
 
         start = std::chrono::system_clock::now();
         ocl.run(data);
         end = std::chrono::system_clock::now();
         duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-        std::cout<<"run: "<<std::to_string(duration / 1000.0)<<" us"<<std::endl;
+        std::cout<<"run: "<<std::to_string(duration / 1000000.0)<<" ms"<<std::endl;
 
         start = std::chrono::system_clock::now();
         ocl.copyFromDevice(data);
         end = std::chrono::system_clock::now();
         duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-        std::cout<<"copy from device: "<<std::to_string(duration / 1000.0)<<" us"<<std::endl;
+        std::cout<<"copy from device: "<<std::to_string(duration / 1000000.0)<<" ms"<<std::endl;
     }
 
     // check result
     float* outputValues = static_cast<float*>(data.buffer[2].data);
     // Should get '3' here.
-    //std::cout << outputValues[42] << std::endl;
+    std::cout << outputValues[42] << std::endl;
     /*for(uint64_t i = 0; i < N; i++)
     {
         std::cout<<outputValues[i]<<std::endl;

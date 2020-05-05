@@ -1,3 +1,5 @@
+// see also https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/clGetDeviceInfo.html
+
 #include <libKitsunemimiOpencl/opencl.h>
 
 #include <libKitsunemimiPersistence/logger/logger.h>
@@ -28,7 +30,7 @@ Opencl::init(const OpenClConfig &config)
         cl::Platform::get(&m_platform);
         if(m_platform.empty())
         {
-            LOG_ERROR("OpenCL platforms not found.");
+            LOG_ERROR("No OpenCL platforms found.");
             return false;
         }
 
@@ -66,9 +68,11 @@ Opencl::init(const OpenClConfig &config)
 }
 
 /**
- * @brief Opencl::copyToDevice
- * @param data
- * @return
+ * @brief copy data from host to device
+ *
+ * @param data object with all data
+ *
+ * @return true, if successful, else false
  */
 bool
 Opencl::copyToDevice(OpenClData &data)
@@ -109,6 +113,8 @@ Opencl::copyToDevice(OpenClData &data)
  * @brief run kernel with input
  *
  * @param data input-data for the run
+ *
+ * @return true, if successful, else false
  */
 bool
 Opencl::run(OpenClData &data)
@@ -131,10 +137,14 @@ Opencl::run(OpenClData &data)
 }
 
 /**
- * @brief Opencl::copyFromDevice
- * @param data
+ * @brief copy data of all as output marked buffer from device to host
+ *
+ * @param data object with all data
+ *
+ * @return true, if successful, else false
  */
-bool Opencl::copyFromDevice(OpenClData &data)
+bool
+Opencl::copyFromDevice(OpenClData &data)
 {
     // get output back from device
     for(uint64_t i = 0; i < data.buffer.size(); i++)
@@ -154,16 +164,19 @@ bool Opencl::copyFromDevice(OpenClData &data)
 }
 
 /**
- * @brief Opencl::getVendor
+ * @brief
+ *
  * @return
  */
 const std::string
 Opencl::getVendor()
 {
+    // precheck
     if(m_platform.size() == 0) {
         return "";
     }
 
+    // get information
     std::string vendor;
     m_platform.at(0).getInfo(CL_PLATFORM_VENDOR, &vendor);
 
@@ -171,16 +184,19 @@ Opencl::getVendor()
 }
 
 /**
- * @brief Opencl::getSizeOfLocalMemory
+ * @brief
+ *
  * @return
  */
 uint64_t
 Opencl::getLocalMemorySize()
 {
+    // precheck
     if(m_device.size() == 0) {
         return 0;
     }
 
+    // get information
     cl_ulong size = 0;
     m_device.at(0).getInfo(CL_DEVICE_LOCAL_MEM_SIZE, &size);
 
@@ -188,16 +204,19 @@ Opencl::getLocalMemorySize()
 }
 
 /**
- * @brief Opencl::getGlobalMemorySize
+ * @brief
+ *
  * @return
  */
 uint64_t
 Opencl::getGlobalMemorySize_total()
 {
+    // precheck
     if(m_device.size() == 0) {
         return 0;
     }
 
+    // get information
     cl_ulong size = 0;
     m_device.at(0).getInfo(CL_DEVICE_GLOBAL_MEM_SIZE, &size);
 
@@ -205,18 +224,21 @@ Opencl::getGlobalMemorySize_total()
 }
 
 /**
- * @brief Opencl::getGlobalMemorySize_available
+ * @brief
+ *
  * @return
  */
 uint64_t
 Opencl::getGlobalMemorySize_free()
 {
+    // precheck
     if(m_device.size() == 0
             || getVendor() != "AMD")
     {
         return 0;
     }
 
+    // get information
     cl_ulong size = 0;
     m_device.at(0).getInfo(CL_DEVICE_GLOBAL_FREE_MEMORY_AMD, &size);
 
@@ -224,16 +246,19 @@ Opencl::getGlobalMemorySize_free()
 }
 
 /**
- * @brief Opencl::getMaxMemAllocSize
+ * @brief
+ *
  * @return
  */
 uint64_t
 Opencl::getMaxMemAllocSize()
 {
+    // precheck
     if(m_device.size() == 0) {
         return 0;
     }
 
+    // get information
     cl_ulong size = 0;
     m_device.at(0).getInfo(CL_DEVICE_MAX_MEM_ALLOC_SIZE, &size);
 
@@ -241,16 +266,19 @@ Opencl::getMaxMemAllocSize()
 }
 
 /**
- * @brief Opencl::getMaxWorkgroupSize
- * @return
+ * @brief get maximum total number of work-items within a work-group
+ *
+ * @return maximum work-group size
  */
 uint64_t
 Opencl::getMaxWorkGroupSize()
 {
+    // precheck
     if(m_device.size() == 0) {
         return 0;
     }
 
+    // get information
     size_t size = 0;
     m_device.at(0).getInfo(CL_DEVICE_MAX_WORK_GROUP_SIZE, &size);
 
@@ -258,20 +286,24 @@ Opencl::getMaxWorkGroupSize()
 }
 
 /**
- * @brief Opencl::getMaxThreadNumber
- * @return
+ * @brief get maximum size of all dimensions of work-items within a work-group
+ *
+ * @return worker-dimension object
  */
 WorkerDim
 Opencl::getMaxWorkItemSize()
 {
+    // precheck
     if(m_device.size() == 0) {
         return WorkerDim();
     }
 
+    // get information
     size_t size[3];
     m_device.at(0).getInfo(CL_DEVICE_MAX_WORK_ITEM_SIZES, &size);
 
-    uint64_t dimension = getMaxWorkItemDimension();
+    // create result object
+    const uint64_t dimension = getMaxWorkItemDimension();
     WorkerDim result;
     if(dimension > 0) {
         result.x = size[0];
@@ -287,16 +319,19 @@ Opencl::getMaxWorkItemSize()
 }
 
 /**
- * @brief Opencl::getMaxTheadDimension
- * @return
+ * @brief get maximaum dimension of items
+ *
+ * @return number of dimensions
  */
 uint64_t
 Opencl::getMaxWorkItemDimension()
 {
+    // precheck
     if(m_device.size() == 0) {
         return 0;
     }
 
+    // get information
     cl_uint size = 0;
     m_device.at(0).getInfo(CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, &size);
 

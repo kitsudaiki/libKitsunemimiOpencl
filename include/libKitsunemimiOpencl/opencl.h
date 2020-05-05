@@ -21,30 +21,34 @@ public:
     Opencl();
 
     bool init(const OpenClConfig &config);
-
     bool copyToDevice(OpenClData &data);
     bool run(OpenClData &data);
     bool copyFromDevice(OpenClData &data);
 
+    // getter for common information
     const std::string getVendor();
+
+    // getter for memory information
     uint64_t getLocalMemorySize();
     uint64_t getGlobalMemorySize_total();
     uint64_t getGlobalMemorySize_free();
     uint64_t getMaxMemAllocSize();
 
+    // getter for work-group information
     uint64_t getMaxWorkGroupSize();
     WorkerDim getMaxWorkItemSize();
     uint64_t getMaxWorkItemDimension();
 
-    // also see: https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/clGetDeviceInfo.html
-
-private:
+    // opencl objects
+    // I left these public for the case, that there have to be some specific operations have to be
+    // performed, which are not possible or available with the generic functions of this library.
     std::vector<cl::Platform> m_platform;
     std::vector<cl::Device> m_device;
     cl::Context m_context;
     cl::Kernel m_kernel;
     cl::CommandQueue m_queue;
 
+private:
     void collectDevices(const OpenClConfig &config);
     bool build(const OpenClConfig &config);
 };
