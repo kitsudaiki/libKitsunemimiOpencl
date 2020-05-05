@@ -29,11 +29,11 @@ int main()
         "    size_t globalSize_x = get_global_size(0);\n"
         "    size_t globalSize_y = get_global_size(1);\n"
         "    \n"
-        "    size_t gloablId = get_global_id(0) + get_global_size(0) * get_global_id(1);\n"
-        "    if (gloablId < n1)\n"
+        "    size_t globalId = get_global_id(0) + get_global_size(0) * get_global_id(1);\n"
+        "    if (globalId < n1)\n"
         "    {\n"
-        "       temp[localId_x] = b[gloablId];\n"
-        "       c[gloablId] = a[gloablId] + temp[localId_x];"
+        "       temp[localId_x] = b[globalId];\n"
+        "       c[globalId] = a[globalId] + temp[localId_x];"
         "    }\n"
         "}\n";
 
@@ -47,9 +47,9 @@ int main()
     // create data-object
     Kitsunemimi::Opencl::OpenClData data;
 
-    data.numberOfWg.x = N / 1024;
+    data.numberOfWg.x = N / 512;
     data.numberOfWg.y = 2;
-    data.threadsPerWg.x = 512;
+    data.threadsPerWg.x = 256;
 
     // init empty buffer
     data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float)));
