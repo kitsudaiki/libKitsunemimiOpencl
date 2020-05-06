@@ -137,6 +137,10 @@ Opencl::copyToDevice(OpenClData &data)
 bool
 Opencl::run(OpenClData &data)
 {
+    if(validateWorkerGroupSize(data) == false) {
+        return false;
+    }
+
     // convert ranges
     const cl::NDRange globalRange = cl::NDRange(data.numberOfWg.x * data.threadsPerWg.x,
                                                 data.numberOfWg.y * data.threadsPerWg.y,
@@ -324,6 +328,52 @@ Opencl::getMaxWorkItemDimension()
     m_device.at(0).getInfo(CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, &size);
 
     return size;
+}
+
+/**
+ * @brief Opencl::validateWorkerGroupSize
+ * @param data
+ * @return
+ */
+bool
+Opencl::validateWorkerGroupSize(const OpenClData &data)
+{
+    const uint64_t givenSize = data.threadsPerWg.x * data.threadsPerWg.y * data.threadsPerWg.z;
+    const uint64_t maxSize = getMaxWorkGroupSize();
+
+    // checko maximum size
+    if(givenSize > maxSize)
+    {
+        LOG_ERROR("Size of the work-group is too big. The maximum allowed is "
+                  + std::to_string(maxSize)
+                  + ", but set was a total size of "
+                  + std::to_string(givenSize));
+        return false;
+    }
+
+    const WorkerDim maxDim = getMaxWorkItemSize();
+
+    // check single dimensions
+    if(data.threadsPerWg.x > maxDim.x)
+    {
+        LOG_ERROR("The x-dimension of the work-item size is only allowed to have a maximum of"
+                  + std::to_string(maxDim.x));
+        return false;
+    }
+    if(data.threadsPerWg.y > maxDim.y)
+    {
+        LOG_ERROR("The y-dimension of the work-item size is only allowed to have a maximum of"
+                  + std::to_string(maxDim.y));
+        return false;
+    }
+    if(data.threadsPerWg.z > maxDim.z)
+    {
+        LOG_ERROR("The z-dimension of the work-item size is only allowed to have a maximum of"
+                  + std::to_string(maxDim.z));
+        return false;
+    }
+
+    return true;
 }
 
 /**

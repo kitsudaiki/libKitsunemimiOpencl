@@ -46,6 +46,7 @@ public:
     uint32_t m_argCounter = 0;
 
 private:
+    bool validateWorkerGroupSize(const OpenClData &data);
     void collectDevices(const OpenClConfig &config);
     bool build(const OpenClConfig &config);
 };
