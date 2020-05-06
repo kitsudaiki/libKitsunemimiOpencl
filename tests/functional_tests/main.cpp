@@ -10,7 +10,7 @@ int main()
 {
     Kitsunemimi::Persistence::initConsoleLogger(true);
 
-    const size_t N = 1 << 25;
+    const size_t N = 1 << 27;
 
     // example kernel for task: c = a + b.
     const std::string kernelCode =
@@ -52,9 +52,9 @@ int main()
     data.threadsPerWg.x = 256;
 
     // init empty buffer
-    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float)));
-    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float)));
-    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float), true));
+    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float), false, true));
+    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float), false, true));
+    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float), true, true));
 
     // convert pointer
     float* a = static_cast<float*>(data.buffer[0].data);

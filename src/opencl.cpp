@@ -77,8 +77,6 @@ Opencl::init(const OpenClConfig &config)
 bool
 Opencl::copyToDevice(OpenClData &data)
 {
-    uint32_t argCounter = 0;
-
     // send input to device
     for(uint64_t i = 0; i < data.buffer.size(); i++)
     {
@@ -86,24 +84,44 @@ Opencl::copyToDevice(OpenClData &data)
 
         if(buffer.isOutput)
         {
+            // create flag for memory handling
+            cl_mem_flags flags = CL_MEM_READ_WRITE;
+            if(buffer.useHostPtr) {
+                flags = flags | CL_MEM_USE_HOST_PTR;
+            } else {
+                flags = flags | CL_MEM_COPY_HOST_PTR;
+            }
+
+            // send data or reference to device
             data.buffer[i].clBuffer = cl::Buffer(m_context,
-                                                 CL_MEM_READ_WRITE,
-                                                 buffer.numberOfBytes);
-            m_kernel.setArg(argCounter, data.buffer[i].clBuffer);
-            argCounter++;
+                                                 flags,
+                                                 buffer.numberOfBytes,
+                                                 buffer.data);
+            m_kernel.setArg(m_argCounter, data.buffer[i].clBuffer);
+            m_argCounter++;
         }
         else
         {
+            // create flag for memory handling
+            cl_mem_flags flags = CL_MEM_READ_ONLY;
+            if(buffer.useHostPtr) {
+                flags = flags | CL_MEM_USE_HOST_PTR;
+            } else {
+                flags = flags | CL_MEM_COPY_HOST_PTR;
+            }
+
+            // send data or reference to device
             data.buffer[i].clBuffer = cl::Buffer(m_context,
-                                                 CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+                                                 flags,
                                                  buffer.numberOfBytes,
                                                  buffer.data);
-            m_kernel.setArg(argCounter, data.buffer[i].clBuffer);
-            argCounter++;
+            m_kernel.setArg(m_argCounter, data.buffer[i].clBuffer);
+            m_argCounter++;
         }
 
-        m_kernel.setArg(argCounter, static_cast<cl_ulong>(buffer.numberOfObjects));
-        argCounter++;
+        // copy buffer-size as additional argument to the device
+        m_kernel.setArg(m_argCounter, static_cast<cl_ulong>(buffer.numberOfObjects));
+        m_argCounter++;
     }
 
     return true;
@@ -151,12 +169,24 @@ Opencl::copyFromDevice(OpenClData &data)
     {
         if(data.buffer.at(i).isOutput)
         {
-            // copy result back to host
-            m_queue.enqueueReadBuffer(data.buffer[i].clBuffer,
-                                      CL_TRUE,
-                                      0,
-                                      data.buffer[i].numberOfBytes,
-                                      data.buffer[i].data);
+            if(data.buffer.at(i).useHostPtr)
+            {
+                // copy result back to host
+                m_queue.enqueueMapBuffer(data.buffer[i].clBuffer,
+                                         CL_TRUE,
+                                         0,
+                                         0,
+                                         data.buffer[i].numberOfBytes);
+            }
+            else
+            {
+                // copy result back to host
+                m_queue.enqueueReadBuffer(data.buffer[i].clBuffer,
+                                          CL_TRUE,
+                                          0,
+                                          data.buffer[i].numberOfBytes,
+                                          data.buffer[i].data);
+            }
         }
     }
 

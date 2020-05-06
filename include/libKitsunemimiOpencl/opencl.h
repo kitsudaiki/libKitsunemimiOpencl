@@ -43,6 +43,7 @@ public:
     cl::Context m_context;
     cl::Kernel m_kernel;
     cl::CommandQueue m_queue;
+    uint32_t m_argCounter = 0;
 
 private:
     void collectDevices(const OpenClConfig &config);
