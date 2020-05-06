@@ -25,13 +25,9 @@ public:
     bool run(OpenClData &data);
     bool copyFromDevice(OpenClData &data);
 
-    // getter for common information
-    const std::string getVendor();
-
     // getter for memory information
     uint64_t getLocalMemorySize();
-    uint64_t getGlobalMemorySize_total();
-    uint64_t getGlobalMemorySize_free();
+    uint64_t getGlobalMemorySize();
     uint64_t getMaxMemAllocSize();
 
     // getter for work-group information

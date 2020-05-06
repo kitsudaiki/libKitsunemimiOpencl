@@ -168,26 +168,6 @@ Opencl::copyFromDevice(OpenClData &data)
  *
  * @return
  */
-const std::string
-Opencl::getVendor()
-{
-    // precheck
-    if(m_platform.size() == 0) {
-        return "";
-    }
-
-    // get information
-    std::string vendor;
-    m_platform.at(0).getInfo(CL_PLATFORM_VENDOR, &vendor);
-
-    return vendor;
-}
-
-/**
- * @brief
- *
- * @return
- */
 uint64_t
 Opencl::getLocalMemorySize()
 {
@@ -209,7 +189,7 @@ Opencl::getLocalMemorySize()
  * @return
  */
 uint64_t
-Opencl::getGlobalMemorySize_total()
+Opencl::getGlobalMemorySize()
 {
     // precheck
     if(m_device.size() == 0) {
@@ -219,28 +199,6 @@ Opencl::getGlobalMemorySize_total()
     // get information
     cl_ulong size = 0;
     m_device.at(0).getInfo(CL_DEVICE_GLOBAL_MEM_SIZE, &size);
-
-    return size;
-}
-
-/**
- * @brief
- *
- * @return
- */
-uint64_t
-Opencl::getGlobalMemorySize_free()
-{
-    // precheck
-    if(m_device.size() == 0
-            || getVendor() != "AMD")
-    {
-        return 0;
-    }
-
-    // get information
-    cl_ulong size = 0;
-    m_device.at(0).getInfo(CL_DEVICE_GLOBAL_FREE_MEMORY_AMD, &size);
 
     return size;
 }

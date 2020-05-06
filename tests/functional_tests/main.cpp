@@ -10,7 +10,7 @@ int main()
 {
     Kitsunemimi::Persistence::initConsoleLogger(true);
 
-    const size_t N = 1 << 27;
+    const size_t N = 1 << 25;
 
     // example kernel for task: c = a + b.
     const std::string kernelCode =
@@ -105,10 +105,8 @@ int main()
     }*/
 
     std::cout<<std::endl;
-    std::cout<<"vendor: "<<ocl.getVendor()<<std::endl;
     std::cout<<"local-size: "<<ocl.getLocalMemorySize()<<std::endl;
-    std::cout<<"global-size: "<<ocl.getGlobalMemorySize_total()<<std::endl;
-    std::cout<<"global-available: "<<ocl.getGlobalMemorySize_free()<<std::endl;
+    std::cout<<"global-size: "<<ocl.getGlobalMemorySize()<<std::endl;
     std::cout<<"max Mem alloc size: "<<ocl.getMaxMemAllocSize()<<std::endl;
     std::cout<<std::endl;
     std::cout<<"max work-group-size: "<<ocl.getMaxWorkGroupSize()<<std::endl;
