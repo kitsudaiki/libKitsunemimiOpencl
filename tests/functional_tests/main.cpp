@@ -72,37 +72,64 @@ int main()
     std::chrono::high_resolution_clock::time_point end;
 
     // run
-    if(ocl.init(config))
-    {
-        std::cout<<std::endl;
+    assert(ocl.init(config));
 
-        start = std::chrono::system_clock::now();
-        ocl.copyToDevice(data);
-        end = std::chrono::system_clock::now();
-        duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-        std::cout<<"copy to device: "<<std::to_string(duration / 1000000.0)<<" ms"<<std::endl;
+    std::cout<<std::endl;
 
-        start = std::chrono::system_clock::now();
-        ocl.run(data);
-        end = std::chrono::system_clock::now();
-        duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-        std::cout<<"run: "<<std::to_string(duration / 1000000.0)<<" ms"<<std::endl;
+    // copy to device
+    start = std::chrono::system_clock::now();
+    ocl.copyToDevice(data);
+    end = std::chrono::system_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+    std::cout<<"copy to device: "<<std::to_string(duration / 1000000.0)<<" ms"<<std::endl;
 
-        start = std::chrono::system_clock::now();
-        ocl.copyFromDevice(data);
-        end = std::chrono::system_clock::now();
-        duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-        std::cout<<"copy from device: "<<std::to_string(duration / 1000000.0)<<" ms"<<std::endl;
-    }
+    // first run
+    start = std::chrono::system_clock::now();
+    ocl.run(data);
+    end = std::chrono::system_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+    std::cout<<"run: "<<std::to_string(duration / 1000000.0)<<" ms"<<std::endl;
+
+    // copy output back
+    start = std::chrono::system_clock::now();
+    ocl.copyFromDevice(data);
+    end = std::chrono::system_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+    std::cout<<"copy from device: "<<std::to_string(duration / 1000000.0)<<" ms"<<std::endl;
 
     // check result
     float* outputValues = static_cast<float*>(data.buffer[2].data);
     // Should get '3' here.
     std::cout << outputValues[42] << std::endl;
-    /*for(uint64_t i = 0; i < N; i++)
+
+    // update data on host
+    for(uint32_t i = 0; i < N; i++)
     {
-        std::cout<<outputValues[i]<<std::endl;
-    }*/
+        a[i] = 5.0f;
+    }
+
+    // update data on device
+    ocl.updateBuffer(data.buffer[0]);
+
+    // second run
+    start = std::chrono::system_clock::now();
+    ocl.run(data);
+    end = std::chrono::system_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+    std::cout<<"run: "<<std::to_string(duration / 1000000.0)<<" ms"<<std::endl;
+
+    // copy new output back
+    start = std::chrono::system_clock::now();
+    ocl.copyFromDevice(data);
+    end = std::chrono::system_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+    std::cout<<"copy from device: "<<std::to_string(duration / 1000000.0)<<" ms"<<std::endl;
+
+    // check new result
+    outputValues = static_cast<float*>(data.buffer[2].data);
+    // Should get '7' here.
+    std::cout << outputValues[42] << std::endl;
+
 
     std::cout<<std::endl;
     std::cout<<"local-size: "<<ocl.getLocalMemorySize()<<std::endl;

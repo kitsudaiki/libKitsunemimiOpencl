@@ -22,6 +22,7 @@ public:
 
     bool init(const OpenClConfig &config);
     bool copyToDevice(OpenClData &data);
+    bool updateBuffer(WorkerBuffer &buffer);
     bool run(OpenClData &data);
     bool copyFromDevice(OpenClData &data);
 

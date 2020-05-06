@@ -128,6 +128,39 @@ Opencl::copyToDevice(OpenClData &data)
 }
 
 /**
+ * @brief Opencl::updateBuffer
+ * @param buffer
+ * @return
+ */
+bool
+Opencl::updateBuffer(WorkerBuffer &buffer)
+{
+    if(buffer.isOutput) {
+        return false;
+    }
+
+    if(buffer.useHostPtr) {
+        return true;
+    }
+
+    // create flag for memory handling
+    cl_mem_flags flags = CL_MEM_READ_ONLY;
+    if(buffer.useHostPtr) {
+        flags = flags | CL_MEM_USE_HOST_PTR;
+    } else {
+        flags = flags | CL_MEM_COPY_HOST_PTR;
+    }
+
+    m_queue.enqueueWriteBuffer(buffer.clBuffer,
+                               CL_TRUE,
+                               0,
+                               buffer.numberOfBytes,
+                               buffer.data);
+
+    return true;
+}
+
+/**
  * @brief run kernel with input
  *
  * @param data input-data for the run
