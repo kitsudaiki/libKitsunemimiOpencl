@@ -4,6 +4,7 @@ QT -= qt core gui
 CONFIG += c++14
 
 SUBDIRS = \
-    functional_tests
+    functional_tests \
+    benchmark_tests
 
 tests.depends = src
