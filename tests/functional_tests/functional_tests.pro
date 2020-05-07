@@ -22,4 +22,8 @@ INCLUDEPATH += $$PWD
 LIBS += -L../../src -lKitsunemimiOpencl
 
 SOURCES += \
-    main.cpp
+    main.cpp \
+    simple_test.cpp
+
+HEADERS += \
+    simple_test.h
