@@ -28,8 +28,10 @@ SimpleTest::SimpleTest()
     m_cleanupTimeSlot.unitName = "ms";
     m_cleanupTimeSlot.name = "cleanup";
 
-    for(uint32_t i = 0; i < 2; i++)
+    for(uint32_t i = 0; i < 10; i++)
     {
+        std::cout<<"run cycle "<<(i + 1)<<std::endl;
+
         simple_test();
 
         m_initTimeSlot.values.push_back(
@@ -136,9 +138,6 @@ SimpleTest::simple_test()
     assert(ocl.copyFromDevice(data));
     m_copyToHostTimeSlot.stopTimer();
 
-    m_cleanupTimeSlot.startTimer();
-    m_cleanupTimeSlot.stopTimer();
-
     // update data on host
     for(uint32_t i = 0; i < N; i++)
     {
@@ -149,6 +148,11 @@ SimpleTest::simple_test()
     m_updateTimeSlot.startTimer();
     assert(ocl.updateBufferOnDevice(data.buffer[0]));
     m_updateTimeSlot.stopTimer();
+
+    // clear device
+    m_cleanupTimeSlot.startTimer();
+    assert(ocl.closeDevice(data));
+    m_cleanupTimeSlot.stopTimer();
 }
 
 }
