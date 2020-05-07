@@ -22,7 +22,7 @@ Opencl::Opencl() {}
  * @return true, if creation was successful, else false
  */
 bool
-Opencl::init(const OpenClConfig &config)
+Opencl::initDevice(const OpenClConfig &config)
 {
     try
     {
@@ -75,7 +75,7 @@ Opencl::init(const OpenClConfig &config)
  * @return true, if successful, else false
  */
 bool
-Opencl::copyToDevice(OpenClData &data)
+Opencl::initCopyToDevice(OpenClData &data)
 {
     // send input to device
     for(uint64_t i = 0; i < data.buffer.size(); i++)
@@ -133,7 +133,7 @@ Opencl::copyToDevice(OpenClData &data)
  * @return
  */
 bool
-Opencl::updateBuffer(WorkerBuffer &buffer)
+Opencl::updateBufferOnDevice(WorkerBuffer &buffer)
 {
     if(buffer.isOutput) {
         return false;
@@ -226,6 +226,34 @@ Opencl::copyFromDevice(OpenClData &data)
             }
         }
     }
+
+    return true;
+}
+
+/**
+ * @brief Opencl::closeDevice
+ * @return
+ */
+bool
+Opencl::closeDevice(OpenClData &data)
+{
+    // end queue
+    const cl_int ret = m_queue.finish();
+    if(ret != CL_SUCCESS) {
+        return false;
+    }
+
+    // free allocated memory on the host
+    for(uint64_t i = 0; i < data.buffer.size(); i++)
+    {
+        WorkerBuffer buffer = data.buffer.at(i);
+        if(buffer.data != nullptr) {
+            Kitsunemimi::alignedFree(buffer.data);
+        }
+    }
+
+    // clear data and free memory on the device
+    data.buffer.clear();
 
     return true;
 }

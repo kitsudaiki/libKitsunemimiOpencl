@@ -74,10 +74,10 @@ SimpleTest::simple_test()
     }
 
     // run
-    TEST_EQUAL(ocl.init(config), true);
-    ocl.copyToDevice(data);
-    ocl.run(data);
-    ocl.copyFromDevice(data);
+    TEST_EQUAL(ocl.initDevice(config), true);
+    TEST_EQUAL(ocl.initCopyToDevice(data), true);
+    TEST_EQUAL(ocl.run(data), true);
+    TEST_EQUAL(ocl.copyFromDevice(data), true);
 
     // check result
     float* outputValues = static_cast<float*>(data.buffer[2].data);
@@ -90,7 +90,7 @@ SimpleTest::simple_test()
     }
 
     // update data on device
-    TEST_EQUAL(ocl.updateBuffer(data.buffer[0]), true);
+    TEST_EQUAL(ocl.updateBufferOnDevice(data.buffer[0]), true);
 
     // second run
     TEST_EQUAL(ocl.run(data), true);
@@ -110,6 +110,8 @@ SimpleTest::simple_test()
     TEST_NOT_EQUAL(ocl.getMaxWorkItemSize().x, 0);
     TEST_NOT_EQUAL(ocl.getMaxWorkItemSize().y, 0);
     TEST_NOT_EQUAL(ocl.getMaxWorkItemSize().z, 0);
+
+    TEST_EQUAL(ocl.closeDevice(data), true);
 }
 
 }

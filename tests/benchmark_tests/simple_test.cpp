@@ -118,12 +118,12 @@ SimpleTest::simple_test()
 
     // init
     m_initTimeSlot.startTimer();
-    assert(ocl.init(config));
+    assert(ocl.initDevice(config));
     m_initTimeSlot.stopTimer();
 
     // copy to device
     m_copyToDeviceTimeSlot.startTimer();
-    assert(ocl.copyToDevice(data));
+    assert(ocl.initCopyToDevice(data));
     m_copyToDeviceTimeSlot.stopTimer();
 
     // run
@@ -147,7 +147,7 @@ SimpleTest::simple_test()
 
     // update data on device
     m_updateTimeSlot.startTimer();
-    assert(ocl.updateBuffer(data.buffer[0]));
+    assert(ocl.updateBufferOnDevice(data.buffer[0]));
     m_updateTimeSlot.stopTimer();
 }
 

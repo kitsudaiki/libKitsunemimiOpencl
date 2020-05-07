@@ -20,11 +20,12 @@ class Opencl
 public:
     Opencl();
 
-    bool init(const OpenClConfig &config);
-    bool copyToDevice(OpenClData &data);
-    bool updateBuffer(WorkerBuffer &buffer);
+    bool initDevice(const OpenClConfig &config);
+    bool initCopyToDevice(OpenClData &data);
+    bool updateBufferOnDevice(WorkerBuffer &buffer);
     bool run(OpenClData &data);
     bool copyFromDevice(OpenClData &data);
+    bool closeDevice(OpenClData &data);
 
     // getter for memory information
     uint64_t getLocalMemorySize();
