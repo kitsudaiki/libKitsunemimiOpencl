@@ -1,0 +1,12 @@
+# Changelog
+
+## [Unreleased]
+
+- first version
+	- init device
+	- copy data to device
+	- run kernel
+	- copy data from device
+	- close device
+	- get work-item information from device
+	- get memory information from device
