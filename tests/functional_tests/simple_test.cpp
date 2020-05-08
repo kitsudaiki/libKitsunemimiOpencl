@@ -1,3 +1,25 @@
+/**
+ * @file        simple_test.cpp
+ *
+ * @author      Tobias Anker <tobias.anker@kitsunemimi.moe>
+ *
+ * @copyright   Apache License Version 2.0
+ *
+ *      Copyright 2020 Tobias Anker
+ *
+ *      Licensed under the Apache License, Version 2.0 (the "License");
+ *      you may not use this file except in compliance with the License.
+ *      You may obtain a copy of the License at
+ *
+ *          http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *      Unless required by applicable law or agreed to in writing, software
+ *      distributed under the License is distributed on an "AS IS" BASIS,
+ *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *      See the License for the specific language governing permissions and
+ *      limitations under the License.
+ */
+
 #include "simple_test.h"
 
 #include <libKitsunemimiOpencl/opencl.h>
@@ -101,16 +123,19 @@ SimpleTest::simple_test()
     outputValues = static_cast<float*>(data.buffer[2].data);
     TEST_EQUAL(outputValues[42], 7.0f);
 
+    // test memory getter
     TEST_NOT_EQUAL(ocl.getLocalMemorySize(), 0);
     TEST_NOT_EQUAL(ocl.getGlobalMemorySize(), 0);
     TEST_NOT_EQUAL(ocl.getMaxMemAllocSize(), 0);
 
+    // test work group getter
     TEST_NOT_EQUAL(ocl.getMaxWorkGroupSize(), 0);
     TEST_NOT_EQUAL(ocl.getMaxWorkItemDimension(), 0);
     TEST_NOT_EQUAL(ocl.getMaxWorkItemSize().x, 0);
     TEST_NOT_EQUAL(ocl.getMaxWorkItemSize().y, 0);
     TEST_NOT_EQUAL(ocl.getMaxWorkItemSize().z, 0);
 
+    // test close
     TEST_EQUAL(ocl.closeDevice(data), true);
 }
 

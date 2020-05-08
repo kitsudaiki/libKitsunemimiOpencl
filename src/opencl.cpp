@@ -1,4 +1,24 @@
-// see also https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/clGetDeviceInfo.html
+/**
+ * @file        opencl.cpp
+ *
+ * @author      Tobias Anker <tobias.anker@kitsunemimi.moe>
+ *
+ * @copyright   Apache License Version 2.0
+ *
+ *      Copyright 2020 Tobias Anker
+ *
+ *      Licensed under the Apache License, Version 2.0 (the "License");
+ *      you may not use this file except in compliance with the License.
+ *      You may obtain a copy of the License at
+ *
+ *          http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *      Unless required by applicable law or agreed to in writing, software
+ *      distributed under the License is distributed on an "AS IS" BASIS,
+ *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *      See the License for the specific language governing permissions and
+ *      limitations under the License.
+ */
 
 #include <libKitsunemimiOpencl/opencl.h>
 
@@ -15,6 +35,15 @@ namespace Opencl
 Opencl::Opencl() {}
 
 /**
+ * @brief destructor to close at least the device-connection
+ */
+Opencl::~Opencl()
+{
+    OpenClData emptyData;
+    closeDevice(emptyData);
+}
+
+/**
  * @brief initialize opencl
  *
  * @param config object with config-parameter
@@ -24,6 +53,13 @@ Opencl::Opencl() {}
 bool
 Opencl::initDevice(const OpenClConfig &config)
 {
+    // precheck
+    if(m_device.size() > 0)
+    {
+        LOG_ERROR("device already initialized.");
+        return false;
+    }
+
     try
     {
         // get all available opencl platforms
@@ -77,6 +113,13 @@ Opencl::initDevice(const OpenClConfig &config)
 bool
 Opencl::initCopyToDevice(OpenClData &data)
 {
+    // precheck
+    if(m_device.size() == 0)
+    {
+        LOG_ERROR("no device initialized.");
+        return false;
+    }
+
     // send input to device
     for(uint64_t i = 0; i < data.buffer.size(); i++)
     {
@@ -128,17 +171,28 @@ Opencl::initCopyToDevice(OpenClData &data)
 }
 
 /**
- * @brief Opencl::updateBuffer
- * @param buffer
- * @return
+ * @brief update data inside the buffer on the device
+ *
+ * @param buffer worker-buffer-object with the actual data
+ *
+ * @return false, if copy failed of buffer is output-buffer, else true
  */
 bool
 Opencl::updateBufferOnDevice(WorkerBuffer &buffer)
 {
+    // precheck
+    if(m_device.size() == 0)
+    {
+        LOG_ERROR("no device initialized.");
+        return false;
+    }
+
+    // check if buffer is output-buffer
     if(buffer.isOutput) {
         return false;
     }
 
+    // in case that a host-pointer is used, there is no additional mem-copy necessary
     if(buffer.useHostPtr) {
         return true;
     }
@@ -151,11 +205,16 @@ Opencl::updateBufferOnDevice(WorkerBuffer &buffer)
         flags = flags | CL_MEM_COPY_HOST_PTR;
     }
 
-    m_queue.enqueueWriteBuffer(buffer.clBuffer,
-                               CL_TRUE,
-                               0,
-                               buffer.numberOfBytes,
-                               buffer.data);
+    // write data into the buffer on the device
+    const cl_int ret = m_queue.enqueueWriteBuffer(buffer.clBuffer,
+                                                  CL_TRUE,
+                                                  0,
+                                                  buffer.numberOfBytes,
+                                                  buffer.data);
+
+    if(ret != CL_SUCCESS) {
+        return false;
+    }
 
     return true;
 }
@@ -170,6 +229,14 @@ Opencl::updateBufferOnDevice(WorkerBuffer &buffer)
 bool
 Opencl::run(OpenClData &data)
 {
+    // precheck
+    if(m_device.size() == 0)
+    {
+        LOG_ERROR("no device initialized.");
+        return false;
+    }
+
+    // precheck
     if(validateWorkerGroupSize(data) == false) {
         return false;
     }
@@ -182,11 +249,26 @@ Opencl::run(OpenClData &data)
                                                data.threadsPerWg.y,
                                                data.threadsPerWg.z);
 
-    // launch kernel on the device
-    m_queue.enqueueNDRangeKernel(m_kernel,
-                                 cl::NullRange,
-                                 globalRange,
-                                 localRange);
+    try
+    {
+        // launch kernel on the device
+        const cl_int ret = m_queue.enqueueNDRangeKernel(m_kernel,
+                                                        cl::NullRange,
+                                                        globalRange,
+                                                        localRange);
+        if(ret != CL_SUCCESS) {
+            return false;
+        }
+    }
+    catch(const cl::Error &err)
+    {
+        LOG_ERROR("OpenCL error: "
+                  + std::string(err.what())
+                  + "("
+                  + std::to_string(err.err())
+                  + ")");
+        return false;
+    }
 
     return true;
 }
@@ -201,28 +283,27 @@ Opencl::run(OpenClData &data)
 bool
 Opencl::copyFromDevice(OpenClData &data)
 {
+    // precheck
+    if(m_device.size() == 0)
+    {
+        LOG_ERROR("no device initialized.");
+        return false;
+    }
+
     // get output back from device
     for(uint64_t i = 0; i < data.buffer.size(); i++)
     {
         if(data.buffer.at(i).isOutput)
         {
-            if(data.buffer.at(i).useHostPtr)
-            {
-                // copy result back to host
-                m_queue.enqueueMapBuffer(data.buffer[i].clBuffer,
-                                         CL_TRUE,
-                                         0,
-                                         0,
-                                         data.buffer[i].numberOfBytes);
-            }
-            else
-            {
-                // copy result back to host
-                m_queue.enqueueReadBuffer(data.buffer[i].clBuffer,
-                                          CL_TRUE,
-                                          0,
-                                          data.buffer[i].numberOfBytes,
-                                          data.buffer[i].data);
+            // copy result back to host
+            const cl_int ret = m_queue.enqueueReadBuffer(data.buffer[i].clBuffer,
+                                                         CL_TRUE,
+                                                         0,
+                                                         data.buffer[i].numberOfBytes,
+                                                         data.buffer[i].data);
+
+            if(ret != CL_SUCCESS) {
+                return false;
             }
         }
     }
@@ -231,12 +312,23 @@ Opencl::copyFromDevice(OpenClData &data)
 }
 
 /**
- * @brief Opencl::closeDevice
- * @return
+ * @brief close device, free buffer on device and delete all data from the data-object, which are
+ *        not a null-pointer
+ *
+ * @param data object with all data related to the device, which will be cleared
+
+ * @return true, if successful, else false
  */
 bool
 Opencl::closeDevice(OpenClData &data)
 {
+    // precheck
+    if(m_device.size() == 0)
+    {
+        LOG_ERROR("no device initialized.");
+        return false;
+    }
+
     // end queue
     const cl_int ret = m_queue.finish();
     if(ret != CL_SUCCESS) {
@@ -255,13 +347,18 @@ Opencl::closeDevice(OpenClData &data)
     // clear data and free memory on the device
     data.buffer.clear();
 
+    // clear global variables
+    m_device.clear();
+    m_platform.clear();
+    m_argCounter = 0;
+
     return true;
 }
 
 /**
- * @brief
+ * @brief get size of the local memory on device
  *
- * @return
+ * @return size of local memory on device, or 0 if no device is initialized
  */
 uint64_t
 Opencl::getLocalMemorySize()
@@ -279,9 +376,9 @@ Opencl::getLocalMemorySize()
 }
 
 /**
- * @brief
+ * @brief get size of the global memory on device
  *
- * @return
+ * @return size of global memory on device, or 0 if no device is initialized
  */
 uint64_t
 Opencl::getGlobalMemorySize()
@@ -299,9 +396,9 @@ Opencl::getGlobalMemorySize()
 }
 
 /**
- * @brief
+ * @brief get maximum memory size, which can be allocated at one time on device
  *
- * @return
+ * @return maximum at one time allocatable size, or 0 if no device is initialized
  */
 uint64_t
 Opencl::getMaxMemAllocSize()
@@ -392,9 +489,12 @@ Opencl::getMaxWorkItemDimension()
 }
 
 /**
- * @brief Opencl::validateWorkerGroupSize
- * @param data
- * @return
+ * @brief precheck to validate given worker-group size by comparing them with the maximum values
+ *        defined by the device
+ *
+ * @param data data-object, which also contains the worker-dimensions
+ *
+ * @return true, if successful, else false
  */
 bool
 Opencl::validateWorkerGroupSize(const OpenClData &data)
