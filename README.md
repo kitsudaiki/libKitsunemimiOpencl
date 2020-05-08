@@ -46,9 +46,9 @@ sudo apt-get install g++ qt5-qmake opencl-headers ocl-icd-opencl-dev libboost-fi
 
 Based on the used gpu, there is an additional package necessary:
 
-Intel: `beignet-opencl-icd`
-AMD: `opencl-amdgpu-pro-icd`, `opencl-amdgpu-pro`, `libopencl1-amdgpu-pro` and requirements of these packages
-Nvidia: (not tested)
+- Intel: `beignet-opencl-icd` and requirements of these packages
+- AMD: `opencl-amdgpu-pro-icd`, `opencl-amdgpu-pro`, `libopencl1-amdgpu-pro` and requirements of these packages
+- Nvidia: `nvidia-opencl-icd`, `nvidia-libopencl1` and requirements of these packages (not tested from my side)
 
 
 IMPORTANT: All my projects are only tested on Linux. 
@@ -143,19 +143,19 @@ Kitsunemimi::Opencl::OpenClData data;
 // init empty buffer
 // This prepare a buffer-object and allocate aligned memorey on the host.
 // These objects will be used to transfer data between the host and the device.
-data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, 				// <-- number of elements
-	                                                    sizeof(float),  // <-- size of one element
-	                                                    false,          // <-- is output-buffer
-	                                                    true));         // <-- set to true use a host-pointer
+data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N,              // <-- number of elements
+                                                        sizeof(float),  // <-- size of one element
+                                                        false,          // <-- is output-buffer
+                                                        true));         // <-- set to true use a host-pointer
                                                                         //     This makes copy to device faster,
                                                                         //     but the kernel will be slower.
                                                                         //     So keep the tradeoff in mind!
 data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, 
-	                                                    sizeof(float), 
-	                                                    true, 			// <-- second buffer in the example 
-	                                                                    //     will be defined as output-buffer
-	                                                    true));
-
+                                                        sizeof(float), 
+                                                        true,           // <-- second buffer in the example 
+                                                                        //     will be defined as output-buffer
+                                                        true));
+// in the same style, there are multiple input- and output-buffer possible
 
 // for the example get here the first buffer and set all values of this buffer to 1.0
 float* a = static_cast<float*>(data.buffer[0].data);
@@ -252,4 +252,5 @@ Please give me as many inputs as possible: Bugs, bad code style, bad documentati
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
+This project is licensed under the Apache License Version 2.0 - see the [LICENSE](LICENSE) file for details
+
