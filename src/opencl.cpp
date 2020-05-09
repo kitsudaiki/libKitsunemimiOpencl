@@ -53,6 +53,8 @@ Opencl::~Opencl()
 bool
 Opencl::initDevice(const OpenClConfig &config)
 {
+    LOG_DEBUG("initialize OpenCL device");
+
     // precheck
     if(m_device.size() > 0)
     {
@@ -82,7 +84,7 @@ Opencl::initDevice(const OpenClConfig &config)
             return false;
         }
 
-        LOG_INFO("choosen OpenCL device: " + m_device[0].getInfo<CL_DEVICE_NAME>());
+        LOG_DEBUG("choosen OpenCL device: " + m_device[0].getInfo<CL_DEVICE_NAME>());
 
         // create command queue.
         m_queue = cl::CommandQueue(m_context, m_device[0]);
@@ -113,6 +115,8 @@ Opencl::initDevice(const OpenClConfig &config)
 bool
 Opencl::initCopyToDevice(OpenClData &data)
 {
+    LOG_DEBUG("initial data transfer to OpenCL device");
+
     // precheck
     if(m_device.size() == 0)
     {
@@ -127,6 +131,10 @@ Opencl::initCopyToDevice(OpenClData &data)
 
         if(buffer.isOutput)
         {
+            LOG_DEBUG("copy data to device: "
+                      + std::to_string(buffer.numberOfBytes)
+                      + " Bytes");
+
             // create flag for memory handling
             cl_mem_flags flags = CL_MEM_READ_WRITE;
             if(buffer.useHostPtr) {
@@ -145,6 +153,10 @@ Opencl::initCopyToDevice(OpenClData &data)
         }
         else
         {
+            LOG_DEBUG("copy data to device: "
+                      + std::to_string(buffer.numberOfBytes)
+                      + " Bytes");
+
             // create flag for memory handling
             cl_mem_flags flags = CL_MEM_READ_ONLY;
             if(buffer.useHostPtr) {
@@ -180,6 +192,8 @@ Opencl::initCopyToDevice(OpenClData &data)
 bool
 Opencl::updateBufferOnDevice(WorkerBuffer &buffer)
 {
+    LOG_DEBUG("update buffer on OpenCL device");
+
     // precheck
     if(m_device.size() == 0)
     {
@@ -229,6 +243,8 @@ Opencl::updateBufferOnDevice(WorkerBuffer &buffer)
 bool
 Opencl::run(OpenClData &data)
 {
+    LOG_DEBUG("run kernel on OpenCL device");
+
     // precheck
     if(m_device.size() == 0)
     {
@@ -283,6 +299,8 @@ Opencl::run(OpenClData &data)
 bool
 Opencl::copyFromDevice(OpenClData &data)
 {
+    LOG_DEBUG("copy data from OpenCL device");
+
     // precheck
     if(m_device.size() == 0)
     {
@@ -322,6 +340,8 @@ Opencl::copyFromDevice(OpenClData &data)
 bool
 Opencl::closeDevice(OpenClData &data)
 {
+    LOG_DEBUG("close OpenCL device");
+
     // precheck
     if(m_device.size() == 0)
     {
