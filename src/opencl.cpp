@@ -165,11 +165,11 @@ Opencl::initCopyToDevice(OpenClData &data)
         else
         {
             // create flag for memory handling
-            cl_mem_flags flags = CL_MEM_READ_ONLY;
+            cl_mem_flags flags = 0;
             if(buffer.useHostPtr) {
-                flags = flags | CL_MEM_USE_HOST_PTR;
+                flags = CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR;
             } else {
-                flags = flags | CL_MEM_COPY_HOST_PTR;
+                flags = CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR;
             }
 
             // send data or reference to device
