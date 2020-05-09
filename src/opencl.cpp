@@ -72,7 +72,7 @@ Opencl::initDevice(const OpenClConfig &config)
             return false;
         }
 
-        LOG_INFO("number of OpenCL platforms: " + std::to_string(m_platform.size()));
+        LOG_DEBUG("number of OpenCL platforms: " + std::to_string(m_platform.size()));
 
         // get devices from all available platforms
         collectDevices(config);
@@ -129,12 +129,23 @@ Opencl::initCopyToDevice(OpenClData &data)
     {
         WorkerBuffer buffer = data.buffer.at(i);
 
+        LOG_DEBUG("copy data to device: "
+                  + std::to_string(buffer.numberOfBytes)
+                  + " Bytes");
+
+        // check buffer
+        if(buffer.numberOfBytes == 0
+                || buffer.numberOfObjects == 0
+                || buffer.data == nullptr)
+        {
+            LOG_ERROR("failed to copy data to debuce, because buffer number "
+                      + std::to_string(i)
+                      + " has size 0 or is not initialized.");
+            return false;
+        }
+
         if(buffer.isOutput)
         {
-            LOG_DEBUG("copy data to device: "
-                      + std::to_string(buffer.numberOfBytes)
-                      + " Bytes");
-
             // create flag for memory handling
             cl_mem_flags flags = CL_MEM_READ_WRITE;
             if(buffer.useHostPtr) {
@@ -153,10 +164,6 @@ Opencl::initCopyToDevice(OpenClData &data)
         }
         else
         {
-            LOG_DEBUG("copy data to device: "
-                      + std::to_string(buffer.numberOfBytes)
-                      + " Bytes");
-
             // create flag for memory handling
             cl_mem_flags flags = CL_MEM_READ_ONLY;
             if(buffer.useHostPtr) {
@@ -574,7 +581,7 @@ Opencl::collectDevices(const OpenClConfig &config)
         // get available devices of the selected platform
         std::vector<cl::Device> pldev;
         plat_it->getDevices(CL_DEVICE_TYPE_ALL, &pldev);
-        LOG_INFO("number of OpenCL devices: " + std::to_string(pldev.size()));
+        LOG_DEBUG("number of OpenCL devices: " + std::to_string(pldev.size()));
 
         // select devices within the platform
         std::vector<cl::Device>::const_iterator dev_it;
