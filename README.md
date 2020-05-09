@@ -1,6 +1,6 @@
 # libKitsunemimiOpencl
 
-![Gitlab pipeline status](https://img.shields.io/gitlab/pipeline/tobiasanker/libKitsunemimiOpencl?label=build%20and%20test&style=flat-square)
+![Gitlab pipeline status](https://img.shields.io/gitlab/pipeline/tobiasanker/libKitsunemimiOpencl?label=build&style=flat-square)
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/tobiasanker/libKitsunemimiOpencl?label=version&style=flat-square)
 ![GitHub](https://img.shields.io/github/license/tobiasanker/libKitsunemimiOpencl?style=flat-square)
 ![C++Version](https://img.shields.io/badge/c%2B%2B-14-blue?style=flat-square)
