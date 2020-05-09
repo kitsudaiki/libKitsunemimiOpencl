@@ -1,0 +1,14 @@
+image: registry.gitlab.com/kitsune_other/kitsune_docker_unittest:0.1.2
+
+build:
+  script:
+    - echo Working on branch $CI_COMMIT_REF_NAME
+
+    - apt-get update
+    - apt-get install -y libboost-filesystem-dev opencl-headers ocl-icd-opencl-dev
+
+    - cd /builds/tobiasanker/libKitsunemimiOpencl
+    - ./build.sh
+
+  tags:
+    - docker
