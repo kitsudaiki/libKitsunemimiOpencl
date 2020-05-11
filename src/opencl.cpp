@@ -220,14 +220,6 @@ Opencl::updateBufferOnDevice(WorkerBuffer &buffer,
         return true;
     }
 
-    // create flag for memory handling
-    cl_mem_flags flags = CL_MEM_READ_ONLY;
-    if(buffer.useHostPtr) {
-        flags = flags | CL_MEM_USE_HOST_PTR;
-    } else {
-        flags = flags | CL_MEM_COPY_HOST_PTR;
-    }
-
     // write data into the buffer on the device
     const cl_int ret = m_queue.enqueueWriteBuffer(buffer.clBuffer,
                                                   CL_TRUE,
