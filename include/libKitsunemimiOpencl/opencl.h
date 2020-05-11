@@ -46,7 +46,8 @@ public:
     // device-interaction
     bool initDevice(const OpenClConfig &config);
     bool initCopyToDevice(OpenClData &data);
-    bool updateBufferOnDevice(WorkerBuffer &buffer);
+    bool updateBufferOnDevice(WorkerBuffer &buffer,
+                              const uint64_t offset = 0);
     bool run(OpenClData &data);
     bool copyFromDevice(OpenClData &data);
     bool closeDevice(OpenClData &data);
