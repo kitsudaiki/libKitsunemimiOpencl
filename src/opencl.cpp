@@ -361,7 +361,7 @@ Opencl::closeDevice(OpenClData &data)
     {
         WorkerBuffer buffer = data.buffer.at(i);
         if(buffer.data != nullptr) {
-            Kitsunemimi::alignedFree(buffer.data);
+            Kitsunemimi::alignedFree(buffer.data, buffer.numberOfBytes);
         }
     }
 
