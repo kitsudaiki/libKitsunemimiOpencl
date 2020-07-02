@@ -138,7 +138,7 @@ Opencl::initCopyToDevice(OpenClData &data)
                 || buffer.numberOfObjects == 0
                 || buffer.data == nullptr)
         {
-            LOG_ERROR("failed to copy data to debuce, because buffer number "
+            LOG_ERROR("failed to copy data to device, because buffer number "
                       + std::to_string(i)
                       + " has size 0 or is not initialized.");
             return false;
