@@ -53,8 +53,9 @@ struct WorkerDim
 struct WorkerBuffer
 {
     void* data = nullptr;
-    uint64_t numberOfBytes;
-    uint64_t numberOfObjects;
+    uint64_t numberOfBytes = 0;
+    uint64_t numberOfObjects = 0;
+    uint32_t argumentId = 0;
     bool isOutput = false;
     bool useHostPtr = false;
     cl::Buffer clBuffer;

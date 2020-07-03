@@ -47,7 +47,7 @@ public:
     bool initDevice(const OpenClConfig &config);
     bool initCopyToDevice(OpenClData &data);
     bool updateBufferOnDevice(WorkerBuffer &buffer,
-                              uint64_t size = 0,
+                              uint64_t numberOfObjects = 0xFFFFFFFFFFFFFFFF,
                               const uint64_t offset = 0);
     bool run(OpenClData &data);
     bool copyFromDevice(OpenClData &data);

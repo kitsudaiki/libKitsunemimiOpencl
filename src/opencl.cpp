@@ -144,6 +144,8 @@ Opencl::initCopyToDevice(OpenClData &data)
             return false;
         }
 
+        data.buffer[i].argumentId = m_argCounter;
+
         if(buffer.isOutput)
         {
             // create flag for memory handling
@@ -193,17 +195,19 @@ Opencl::initCopyToDevice(OpenClData &data)
  * @brief update data inside the buffer on the device
  *
  * @param buffer worker-buffer-object with the actual data
- * @param size number of bytes to copy
+ * @param numberOfObjects number of objects to copy
  * @param offset offset in buffer on device
  *
  * @return false, if copy failed of buffer is output-buffer, else true
  */
 bool
 Opencl::updateBufferOnDevice(WorkerBuffer &buffer,
-                             uint64_t size,
+                             uint64_t numberOfObjects,
                              const uint64_t offset)
 {
     LOG_DEBUG("update buffer on OpenCL device");
+
+    const uint64_t objectSize = buffer.numberOfBytes / buffer.numberOfObjects;
 
     // precheck
     if(m_device.size() == 0)
@@ -223,25 +227,31 @@ Opencl::updateBufferOnDevice(WorkerBuffer &buffer,
     }
 
     // set size with value of the buffer, if size not explitely set
-    if(size == 0) {
-        size = buffer.numberOfBytes;
+    if(numberOfObjects == 0xFFFFFFFFFFFFFFFF) {
+        numberOfObjects = buffer.numberOfObjects;
     }
 
     // check size
-    if(offset + size > buffer.numberOfBytes) {
+    if(offset + numberOfObjects > buffer.numberOfObjects) {
         return false;
     }
 
-    // write data into the buffer on the device
-    const cl_int ret = m_queue.enqueueWriteBuffer(buffer.clBuffer,
-                                                  CL_TRUE,
-                                                  offset,
-                                                  size,
-                                                  buffer.data);
+    if(numberOfObjects != 0)
+    {
+        // write data into the buffer on the device
+        const cl_int ret = m_queue.enqueueWriteBuffer(buffer.clBuffer,
+                                                      CL_TRUE,
+                                                      offset * objectSize,
+                                                      numberOfObjects * objectSize,
+                                                      buffer.data);
+        LOG_ERROR("set number of Objects: " + std::to_string(numberOfObjects));
 
-    if(ret != CL_SUCCESS) {
-        return false;
+        if(ret != CL_SUCCESS) {
+            return false;
+        }
     }
+
+    m_kernel.setArg(buffer.argumentId + 1, static_cast<cl_ulong>(numberOfObjects));
 
     return true;
 }
