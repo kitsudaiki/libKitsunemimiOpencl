@@ -193,12 +193,14 @@ Opencl::initCopyToDevice(OpenClData &data)
  * @brief update data inside the buffer on the device
  *
  * @param buffer worker-buffer-object with the actual data
+ * @param size number of bytes to copy
  * @param offset offset in buffer on device
  *
  * @return false, if copy failed of buffer is output-buffer, else true
  */
 bool
 Opencl::updateBufferOnDevice(WorkerBuffer &buffer,
+                             uint64_t size,
                              const uint64_t offset)
 {
     LOG_DEBUG("update buffer on OpenCL device");
@@ -220,11 +222,21 @@ Opencl::updateBufferOnDevice(WorkerBuffer &buffer,
         return true;
     }
 
+    // set size with value of the buffer, if size not explitely set
+    if(size == 0) {
+        size = buffer.numberOfBytes;
+    }
+
+    // check size
+    if(offset + size > buffer.numberOfBytes) {
+        return false;
+    }
+
     // write data into the buffer on the device
     const cl_int ret = m_queue.enqueueWriteBuffer(buffer.clBuffer,
                                                   CL_TRUE,
                                                   offset,
-                                                  buffer.numberOfBytes,
+                                                  size,
                                                   buffer.data);
 
     if(ret != CL_SUCCESS) {
