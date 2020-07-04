@@ -240,8 +240,6 @@ Opencl::updateBufferOnDevice(WorkerBuffer &buffer,
                                                       offset * objectSize,
                                                       numberOfObjects * objectSize,
                                                       buffer.data);
-        LOG_ERROR("set number of Objects: " + std::to_string(numberOfObjects));
-
         if(ret != CL_SUCCESS) {
             return false;
         }
