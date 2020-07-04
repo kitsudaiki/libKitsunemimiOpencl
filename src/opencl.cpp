@@ -221,11 +221,6 @@ Opencl::updateBufferOnDevice(WorkerBuffer &buffer,
         return false;
     }
 
-    // in case that a host-pointer is used, there is no additional mem-copy necessary
-    if(buffer.useHostPtr) {
-        return true;
-    }
-
     // set size with value of the buffer, if size not explitely set
     if(numberOfObjects == 0xFFFFFFFFFFFFFFFF) {
         numberOfObjects = buffer.numberOfObjects;
@@ -236,7 +231,8 @@ Opencl::updateBufferOnDevice(WorkerBuffer &buffer,
         return false;
     }
 
-    if(numberOfObjects != 0)
+    if(buffer.useHostPtr == false
+            && numberOfObjects != 0)
     {
         // write data into the buffer on the device
         const cl_int ret = m_queue.enqueueWriteBuffer(buffer.clBuffer,
