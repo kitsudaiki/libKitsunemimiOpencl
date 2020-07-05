@@ -188,6 +188,15 @@ Opencl::initCopyToDevice(OpenClData &data)
         m_argCounter++;
     }
 
+    // add local memory
+    if(data.localMemorySize != 0)
+    {
+        m_kernel.setArg(m_argCounter, data.localMemorySize, NULL);
+        m_argCounter++;
+        m_kernel.setArg(m_argCounter, static_cast<cl_ulong>(data.localMemorySize));
+        m_argCounter++;
+    }
+
     return true;
 }
 

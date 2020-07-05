@@ -90,6 +90,7 @@ struct OpenClData
     WorkerDim numberOfWg;
     WorkerDim threadsPerWg;
 
+    uint64_t localMemorySize = 0;
     std::vector<WorkerBuffer> buffer;
 };
 
