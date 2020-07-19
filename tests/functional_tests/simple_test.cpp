@@ -48,7 +48,9 @@ SimpleTest::simple_test()
         "       __global const float* b,\n"
         "       ulong n2,\n"
         "       __global float* c,\n"
-        "       ulong out\n"
+        "       ulong out,\n"
+        "       __local uchar* localMemory,\n"
+        "       const ulong localMemorySize\n"
         "       )\n"
         "{\n"
         "    __local float temp[512];\n"
@@ -83,6 +85,7 @@ SimpleTest::simple_test()
     data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float), false, true));
     data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float), false, true));
     data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float), true, true));
+    data.localMemorySize = 256*256;
 
     // convert pointer
     float* a = static_cast<float*>(data.buffer[0].data);
