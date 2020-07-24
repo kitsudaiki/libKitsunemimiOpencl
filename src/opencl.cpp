@@ -124,6 +124,8 @@ Opencl::initCopyToDevice(OpenClData &data)
         return false;
     }
 
+    std::map<std::string, cl::Kernel>::iterator it;
+
     // send input to device
     for(uint64_t i = 0; i < data.buffer.size(); i++)
     {
@@ -161,7 +163,12 @@ Opencl::initCopyToDevice(OpenClData &data)
                                                  flags,
                                                  buffer.numberOfBytes,
                                                  buffer.data);
-            m_kernel.setArg(m_argCounter, data.buffer[i].clBuffer);
+            for(it = m_kernel.begin();
+                it != m_kernel.end();
+                it++)
+            {
+                it->second.setArg(m_argCounter, data.buffer[i].clBuffer);
+            }
             m_argCounter++;
         }
         else
@@ -179,21 +186,41 @@ Opencl::initCopyToDevice(OpenClData &data)
                                                  flags,
                                                  buffer.numberOfBytes,
                                                  buffer.data);
-            m_kernel.setArg(m_argCounter, data.buffer[i].clBuffer);
+            for(it = m_kernel.begin();
+                it != m_kernel.end();
+                it++)
+            {
+                it->second.setArg(m_argCounter, data.buffer[i].clBuffer);
+            }
             m_argCounter++;
         }
 
         // copy buffer-size as additional argument to the device
-        m_kernel.setArg(m_argCounter, static_cast<cl_ulong>(buffer.numberOfObjects));
+        for(it = m_kernel.begin();
+            it != m_kernel.end();
+            it++)
+        {
+            it->second.setArg(m_argCounter, static_cast<cl_ulong>(buffer.numberOfObjects));
+        }
         m_argCounter++;
     }
 
     // add local memory
     if(data.localMemorySize != 0)
     {
-        m_kernel.setArg(m_argCounter, data.localMemorySize, NULL);
+        for(it = m_kernel.begin();
+            it != m_kernel.end();
+            it++)
+        {
+            it->second.setArg(m_argCounter, data.localMemorySize, NULL);
+        }
         m_argCounter++;
-        m_kernel.setArg(m_argCounter, static_cast<cl_ulong>(data.localMemorySize));
+        for(it = m_kernel.begin();
+            it != m_kernel.end();
+            it++)
+        {
+            it->second.setArg(m_argCounter, static_cast<cl_ulong>(data.localMemorySize));
+        }
         m_argCounter++;
     }
 
@@ -254,7 +281,13 @@ Opencl::updateBufferOnDevice(WorkerBuffer &buffer,
         }
     }
 
-    m_kernel.setArg(buffer.argumentId + 1, static_cast<cl_ulong>(numberOfObjects));
+    std::map<std::string, cl::Kernel>::iterator it;
+    for(it = m_kernel.begin();
+        it != m_kernel.end();
+        it++)
+    {
+        it->second.setArg(buffer.argumentId + 1, static_cast<cl_ulong>(numberOfObjects));
+    }
 
     return true;
 }
@@ -267,7 +300,8 @@ Opencl::updateBufferOnDevice(WorkerBuffer &buffer,
  * @return true, if successful, else false
  */
 bool
-Opencl::run(OpenClData &data)
+Opencl::run(OpenClData &data,
+            const std::string &kernelName)
 {
     LOG_DEBUG("run kernel on OpenCL device");
 
@@ -291,10 +325,19 @@ Opencl::run(OpenClData &data)
                                                data.threadsPerWg.y,
                                                data.threadsPerWg.z);
 
+    std::map<std::string, cl::Kernel>::const_iterator it;
+    it = m_kernel.find(kernelName);
+
+    if(it == m_kernel.end())
+    {
+        LOG_ERROR("no kernel with name " + kernelName + " found");
+        return false;
+    }
+
     try
     {
         // launch kernel on the device
-        const cl_int ret = m_queue.enqueueNDRangeKernel(m_kernel,
+        const cl_int ret = m_queue.enqueueNDRangeKernel(it->second,
                                                         cl::NullRange,
                                                         globalRange,
                                                         localRange);
@@ -650,26 +693,32 @@ Opencl::collectDevices(const OpenClConfig &config)
 bool
 Opencl::build(const OpenClConfig &config)
 {
-    // compile opencl program for found device.
-    const std::pair<const char*, size_t> kernelCode = std::make_pair(config.kernelCode.c_str(),
-                                                                     config.kernelCode.size());
-    const cl::Program::Sources source = cl::Program::Sources(1, kernelCode);
-    cl::Program program(m_context, source);
-
-    try
+    std::map<std::string, std::string>::const_iterator it;
+    for(it = config.kernelDefinition.begin();
+        it != config.kernelDefinition.end();
+        it++)
     {
-        // build for all selected devices
-        program.build(m_device);
-    }
-    catch(const cl::Error&)
-    {
-        LOG_ERROR("OpenCL compilation error\n    "
-                  + program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_device[0]));
-        return false;
-    }
+        // compile opencl program for found device.
+        const std::pair<const char*, size_t> kernelCode = std::make_pair(it->second.c_str(),
+                                                                         it->second.size());
+        const cl::Program::Sources source = cl::Program::Sources(1, kernelCode);
+        cl::Program program(m_context, source);
 
-    // create kernel
-    m_kernel = cl::Kernel(program, config.kernelName.c_str());
+        try
+        {
+            // build for all selected devices
+            program.build(m_device);
+        }
+        catch(const cl::Error&)
+        {
+            LOG_ERROR("OpenCL compilation error\n    "
+                      + program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_device[0]));
+            return false;
+        }
+
+        // create kernel
+        m_kernel.insert(std::make_pair(it->first, cl::Kernel(program, it->first.c_str())));
+    }
 
     return true;
 }

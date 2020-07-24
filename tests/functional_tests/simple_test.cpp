@@ -71,8 +71,7 @@ SimpleTest::simple_test()
 
     // create config-object
     Kitsunemimi::Opencl::OpenClConfig config;
-    config.kernelCode = kernelCode;
-    config.kernelName = "add";
+    config.kernelDefinition.insert(std::make_pair("add", kernelCode));
 
     // create data-object
     Kitsunemimi::Opencl::OpenClData data;
@@ -101,7 +100,7 @@ SimpleTest::simple_test()
     // run
     TEST_EQUAL(ocl.initDevice(config), true);
     TEST_EQUAL(ocl.initCopyToDevice(data), true);
-    TEST_EQUAL(ocl.run(data), true);
+    TEST_EQUAL(ocl.run(data, "add"), true);
     TEST_EQUAL(ocl.copyFromDevice(data), true);
 
     // check result
@@ -118,7 +117,7 @@ SimpleTest::simple_test()
     TEST_EQUAL(ocl.updateBufferOnDevice(data.buffer[0]), true);
 
     // second run
-    TEST_EQUAL(ocl.run(data), true);
+    TEST_EQUAL(ocl.run(data, "add"), true);
     // copy new output back
     TEST_EQUAL(ocl.copyFromDevice(data), true);
 

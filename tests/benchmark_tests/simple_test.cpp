@@ -114,8 +114,7 @@ SimpleTest::simple_test()
 
     // create config-object
     Kitsunemimi::Opencl::OpenClConfig config;
-    config.kernelCode = kernelCode;
-    config.kernelName = "add";
+    config.kernelDefinition.insert(std::make_pair("add", kernelCode));
 
     // create data-object
     Kitsunemimi::Opencl::OpenClData data;
@@ -152,7 +151,7 @@ SimpleTest::simple_test()
 
     // run
     m_runTimeSlot.startTimer();
-    assert(ocl.run(data));
+    assert(ocl.run(data, "add"));
     m_runTimeSlot.stopTimer();
 
     // copy output back
