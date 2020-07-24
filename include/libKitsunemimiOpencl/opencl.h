@@ -25,6 +25,7 @@
 
 #include <iostream>
 #include <vector>
+#include <map>
 #include <string>
 
 #define __CL_ENABLE_EXCEPTIONS
@@ -49,7 +50,7 @@ public:
     bool updateBufferOnDevice(WorkerBuffer &buffer,
                               uint64_t numberOfObjects = 0xFFFFFFFFFFFFFFFF,
                               const uint64_t offset = 0);
-    bool run(OpenClData &data);
+    bool run(OpenClData &data, const std::string &kernelName);
     bool copyFromDevice(OpenClData &data);
     bool closeDevice(OpenClData &data);
 
@@ -69,7 +70,7 @@ public:
     std::vector<cl::Platform> m_platform;
     std::vector<cl::Device> m_device;
     cl::Context m_context;
-    cl::Kernel m_kernel;
+    std::map<std::string, cl::Kernel> m_kernel;
     cl::CommandQueue m_queue;
     uint32_t m_argCounter = 0;
 

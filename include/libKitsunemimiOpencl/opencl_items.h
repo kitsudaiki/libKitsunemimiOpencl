@@ -24,6 +24,7 @@
 #define OPENCL_ITEMS_H
 
 #include <iostream>
+#include <map>
 #include <vector>
 #include <string>
 
@@ -77,8 +78,7 @@ struct WorkerBuffer
 
 struct OpenClConfig
 {
-    std::string kernelCode = "";
-    std::string kernelName = "";
+    std::map<std::string, std::string> kernelDefinition;
 
     DeviceType type = GPU_TYPE;
     uint32_t maxNumberOfDevice = 1; // 0 = all
