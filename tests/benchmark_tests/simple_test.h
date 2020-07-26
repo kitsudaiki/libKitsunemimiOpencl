@@ -34,6 +34,7 @@ namespace Kitsunemimi
 {
 namespace Opencl
 {
+class GpuHandler;
 
 class SimpleTest
         : public Kitsunemimi::SpeedTestHelper
@@ -49,6 +50,12 @@ public:
     TimerSlot m_updateTimeSlot;
     TimerSlot m_copyToHostTimeSlot;
     TimerSlot m_cleanupTimeSlot;
+
+private:
+    uint32_t m_id = 0xFFFFFFFF;
+    Kitsunemimi::Opencl::GpuHandler* m_oclHandler = nullptr;
+
+    void chooseDevice();
 };
 
 }

@@ -51,6 +51,11 @@ SimpleTest::SimpleTest()
     m_cleanupTimeSlot.unitName = "ms";
     m_cleanupTimeSlot.name = "cleanup";
 
+    m_oclHandler = new Kitsunemimi::Opencl::GpuHandler();
+    assert(m_oclHandler->m_interfaces.size() != 0);
+
+    chooseDevice();
+
     for(uint32_t i = 0; i < 10; i++)
     {
         std::cout<<"run cycle "<<(i + 1)<<std::endl;
@@ -112,10 +117,7 @@ SimpleTest::simple_test()
         "}\n";
 
     Kitsunemimi::Opencl::GpuHandler oclHandler;
-
-    assert(oclHandler.m_interfaces.size() != 0);
-
-    Kitsunemimi::Opencl::GpuInterface* ocl = oclHandler.m_interfaces.at(0);
+    Kitsunemimi::Opencl::GpuInterface* ocl = oclHandler.m_interfaces.at(m_id);
 
     // create data-object
     Kitsunemimi::Opencl::OpenClData data;
@@ -177,6 +179,22 @@ SimpleTest::simple_test()
     m_cleanupTimeSlot.startTimer();
     assert(ocl->closeDevice(data));
     m_cleanupTimeSlot.stopTimer();
+}
+
+void
+SimpleTest::chooseDevice()
+{
+    std::cout<<"found devices:"<<std::endl;
+    for(uint32_t i = 0; i < m_oclHandler->m_interfaces.size(); i++)
+    {
+        std::cout<<"    "<<i<<": "<<m_oclHandler->m_interfaces.at(i)->getDeviceName()<<std::endl;
+    }
+
+    while(m_id >= m_oclHandler->m_interfaces.size())
+    {
+        std::cout<<"wait for input: ";
+        std::cin>>m_id;
+    }
 }
 
 }

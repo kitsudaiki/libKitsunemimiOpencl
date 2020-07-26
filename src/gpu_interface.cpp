@@ -389,6 +389,16 @@ GpuInterface::copyFromDevice(OpenClData &data)
 }
 
 /**
+ * @brief GpuInterface::getDeviceName
+ * @return
+ */
+const std::string
+GpuInterface::getDeviceName()
+{
+    return m_device.getInfo<CL_DEVICE_NAME>();
+}
+
+/**
  * @brief close device, free buffer on device and delete all data from the data-object, which are
  *        not a null-pointer
  *

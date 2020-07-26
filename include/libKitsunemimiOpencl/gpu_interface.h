@@ -104,6 +104,9 @@ public:
              const std::string &kernelName);
     bool copyFromDevice(OpenClData &data);
 
+    // common getter
+    const std::string getDeviceName();
+
     // getter for memory information
     uint64_t getLocalMemorySize();
     uint64_t getGlobalMemorySize();
