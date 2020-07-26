@@ -22,7 +22,8 @@
 
 #include "simple_test.h"
 
-#include <libKitsunemimiOpencl/opencl.h>
+#include <libKitsunemimiOpencl/gpu_interface.h>
+#include <libKitsunemimiOpencl/gpu_handler.h>
 
 namespace Kitsunemimi
 {
@@ -32,9 +33,6 @@ namespace Opencl
 SimpleTest::SimpleTest()
     : Kitsunemimi::SpeedTestHelper()
 {
-    m_initTimeSlot.unitName = "ms";
-    m_initTimeSlot.name = "init";
-
     m_copyToDeviceTimeSlot.unitName = "ms";
     m_copyToDeviceTimeSlot.name = "copy to device";
 
@@ -59,8 +57,6 @@ SimpleTest::SimpleTest()
 
         simple_test();
 
-        m_initTimeSlot.values.push_back(
-                    m_initTimeSlot.getDuration(MICRO_SECONDS) / 1000.0);
         m_copyToDeviceTimeSlot.values.push_back(
                     m_copyToDeviceTimeSlot.getDuration(MICRO_SECONDS) / 1000.0);
         m_initKernelTimeSlot.values.push_back(
@@ -75,7 +71,6 @@ SimpleTest::SimpleTest()
                     m_cleanupTimeSlot.getDuration(MICRO_SECONDS) / 1000.0);
     }
 
-    addToResult(m_initTimeSlot);
     addToResult(m_copyToDeviceTimeSlot);
     addToResult(m_initKernelTimeSlot);
     addToResult(m_runTimeSlot);
@@ -89,7 +84,7 @@ SimpleTest::SimpleTest()
 void
 SimpleTest::simple_test()
 {
-    const size_t N = 1 << 27;
+    const size_t testSize = 1 << 28;
 
     // example kernel for task: c = a + b.
     const std::string kernelCode =
@@ -116,72 +111,71 @@ SimpleTest::simple_test()
         "    }\n"
         "}\n";
 
-    Kitsunemimi::Opencl::Opencl ocl;
+    Kitsunemimi::Opencl::GpuHandler oclHandler;
+
+    assert(oclHandler.m_interfaces.size() != 0);
+
+    Kitsunemimi::Opencl::GpuInterface* ocl = oclHandler.m_interfaces.at(0);
 
     // create data-object
     Kitsunemimi::Opencl::OpenClData data;
 
-    data.numberOfWg.x = N / 512;
+    data.numberOfWg.x = testSize / 512;
     data.numberOfWg.y = 2;
     data.threadsPerWg.x = 256;
 
     // init empty buffer
-    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float), false, true));
-    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float), false, true));
-    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float), true, true));
+    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), false, true));
+    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), false, true));
+    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), true, true));
 
     // convert pointer
     float* a = static_cast<float*>(data.buffer[0].data);
     float* b = static_cast<float*>(data.buffer[1].data);
 
     // write intput dat into buffer
-    for(uint32_t i = 0; i < N; i++)
+    for(uint32_t i = 0; i < testSize; i++)
     {
         a[i] = 1.0f;
         b[i] = 2.0f;
     }
 
-    // init
-    m_initTimeSlot.startTimer();
-    assert(ocl.initDevice());
-    m_initTimeSlot.stopTimer();
-
     // copy to device
     m_copyToDeviceTimeSlot.startTimer();
-    assert(ocl.initCopyToDevice(data));
+    assert(ocl->initCopyToDevice(data));
     m_copyToDeviceTimeSlot.stopTimer();
 
     m_initKernelTimeSlot.startTimer();
-    assert(ocl.addKernel("add", kernelCode));
-    assert(ocl.bindKernelToBuffer("add", 0, data));
-    assert(ocl.bindKernelToBuffer("add", 1, data));
-    assert(ocl.bindKernelToBuffer("add", 2, data));
+    assert(ocl->addKernel("add", kernelCode));
+    assert(ocl->bindKernelToBuffer("add", 0, data));
+    assert(ocl->bindKernelToBuffer("add", 1, data));
+    assert(ocl->bindKernelToBuffer("add", 2, data));
     m_initKernelTimeSlot.stopTimer();
 
     // run
     m_runTimeSlot.startTimer();
-    assert(ocl.run(data, "add"));
+    assert(ocl->run(data, "add"));
     m_runTimeSlot.stopTimer();
 
     // copy output back
     m_copyToHostTimeSlot.startTimer();
-    assert(ocl.copyFromDevice(data));
+    assert(ocl->copyFromDevice(data));
     m_copyToHostTimeSlot.stopTimer();
 
     // update data on host
-    for(uint32_t i = 0; i < N; i++)
+    for(uint32_t i = 0; i < testSize; i++)
     {
         a[i] = 5.0f;
     }
 
     // update data on device
     m_updateTimeSlot.startTimer();
-    assert(ocl.updateBufferOnDevice("add", 0));
+    assert(ocl->updateBufferOnDevice("add", 0));
     m_updateTimeSlot.stopTimer();
 
     // clear device
     m_cleanupTimeSlot.startTimer();
-    assert(ocl.closeDevice(data));
+    assert(ocl->closeDevice(data));
     m_cleanupTimeSlot.stopTimer();
 }
 

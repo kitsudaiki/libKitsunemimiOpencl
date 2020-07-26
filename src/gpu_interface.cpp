@@ -1,5 +1,5 @@
 /**
- * @file        opencl.cpp
+ * @file        gpu_interface.cpp
  *
  * @author      Tobias Anker <tobias.anker@kitsunemimi.moe>
  *
@@ -20,7 +20,7 @@
  *      limitations under the License.
  */
 
-#include <libKitsunemimiOpencl/opencl.h>
+#include <libKitsunemimiOpencl/gpu_interface.h>
 
 #include <libKitsunemimiPersistence/logger/logger.h>
 
@@ -32,74 +32,22 @@ namespace Opencl
 /**
  * @brief constructor
  */
-Opencl::Opencl() {}
+GpuInterface::GpuInterface(const cl::Device &device)
+{
+    LOG_DEBUG("created new gpu-interface for OpenCL device: " + device.getInfo<CL_DEVICE_NAME>());
+
+    m_device = device;
+    m_context = cl::Context(m_device);
+    m_queue = cl::CommandQueue(m_context, m_device);
+}
 
 /**
  * @brief destructor to close at least the device-connection
  */
-Opencl::~Opencl()
+GpuInterface::~GpuInterface()
 {
     OpenClData emptyData;
     closeDevice(emptyData);
-}
-
-/**
- * @brief initialize opencl
- *
- * @param config object with config-parameter
- *
- * @return true, if creation was successful, else false
- */
-bool
-Opencl::initDevice()
-{
-    LOG_DEBUG("initialize OpenCL device");
-
-    // precheck
-    if(m_device.size() > 0)
-    {
-        LOG_ERROR("device already initialized.");
-        return false;
-    }
-
-    try
-    {
-        // get all available opencl platforms
-        cl::Platform::get(&m_platform);
-        if(m_platform.empty())
-        {
-            LOG_ERROR("No OpenCL platforms found.");
-            return false;
-        }
-
-        LOG_DEBUG("number of OpenCL platforms: " + std::to_string(m_platform.size()));
-
-        // get devices from all available platforms
-        collectDevices();
-
-        // check if there were devices found
-        if(m_device.empty())
-        {
-            LOG_ERROR("No OpenCL device found.");
-            return false;
-        }
-
-        LOG_DEBUG("choosen OpenCL device: " + m_device[0].getInfo<CL_DEVICE_NAME>());
-
-        // create command queue.
-        m_queue = cl::CommandQueue(m_context, m_device[0]);
-
-        return true;
-    }
-    catch(const cl::Error &err)
-    {
-        LOG_ERROR("OpenCL error: "
-                  + std::string(err.what())
-                  + "("
-                  + std::to_string(err.err())
-                  + ")");
-        return false;
-    }
 }
 
 /**
@@ -110,16 +58,9 @@ Opencl::initDevice()
  * @return true, if successful, else false
  */
 bool
-Opencl::initCopyToDevice(OpenClData &data)
+GpuInterface::initCopyToDevice(OpenClData &data)
 {
     LOG_DEBUG("initial data transfer to OpenCL device");
-
-    // precheck
-    if(m_device.size() == 0)
-    {
-        LOG_ERROR("no device initialized.");
-        return false;
-    }
 
     // send input to device
     for(uint64_t i = 0; i < data.buffer.size(); i++)
@@ -178,7 +119,7 @@ Opencl::initCopyToDevice(OpenClData &data)
  * @return
  */
 bool
-Opencl::addKernel(const std::string &id,
+GpuInterface::addKernel(const std::string &id,
                   const std::string &kernelCode)
 {
     LOG_DEBUG("add kernel with id: " + id);
@@ -217,7 +158,7 @@ Opencl::addKernel(const std::string &id,
  * @return
  */
 bool
-Opencl::bindKernelToBuffer(const std::string &kernelId,
+GpuInterface::bindKernelToBuffer(const std::string &kernelId,
                            const uint32_t bufferId,
                            OpenClData &data)
 {
@@ -264,7 +205,7 @@ Opencl::bindKernelToBuffer(const std::string &kernelId,
  * @return
  */
 bool
-Opencl::setLocalMemory(const std::string &kernelId,
+GpuInterface::setLocalMemory(const std::string &kernelId,
                        const uint32_t localMemorySize)
 {
     std::map<std::string, KernelDef>::iterator it;
@@ -295,7 +236,7 @@ Opencl::setLocalMemory(const std::string &kernelId,
  * @return false, if copy failed of buffer is output-buffer, else true
  */
 bool
-Opencl::updateBufferOnDevice(const std::string &kernelId,
+GpuInterface::updateBufferOnDevice(const std::string &kernelId,
                              const uint32_t bufferId,
                              uint64_t numberOfObjects,
                              const uint64_t offset)
@@ -320,13 +261,6 @@ Opencl::updateBufferOnDevice(const std::string &kernelId,
     WorkerBuffer* buffer = it->second.bufferLinks[bufferId];
 
     const uint64_t objectSize = buffer->numberOfBytes / buffer->numberOfObjects;
-
-    // precheck
-    if(m_device.size() == 0)
-    {
-        LOG_ERROR("no device initialized.");
-        return false;
-    }
 
     // check if buffer is output-buffer
     if(buffer->isOutput) {
@@ -370,17 +304,10 @@ Opencl::updateBufferOnDevice(const std::string &kernelId,
  * @return true, if successful, else false
  */
 bool
-Opencl::run(OpenClData &data,
+GpuInterface::run(OpenClData &data,
             const std::string &kernelName)
 {
     LOG_DEBUG("run kernel on OpenCL device");
-
-    // precheck
-    if(m_device.size() == 0)
-    {
-        LOG_ERROR("no device initialized.");
-        return false;
-    }
 
     // precheck
     if(validateWorkerGroupSize(data) == false) {
@@ -436,16 +363,9 @@ Opencl::run(OpenClData &data,
  * @return true, if successful, else false
  */
 bool
-Opencl::copyFromDevice(OpenClData &data)
+GpuInterface::copyFromDevice(OpenClData &data)
 {
     LOG_DEBUG("copy data from OpenCL device");
-
-    // precheck
-    if(m_device.size() == 0)
-    {
-        LOG_ERROR("no device initialized.");
-        return false;
-    }
 
     // get output back from device
     for(uint64_t i = 0; i < data.buffer.size(); i++)
@@ -477,7 +397,7 @@ Opencl::copyFromDevice(OpenClData &data)
  * @return true, if successful, else false
  */
 bool
-Opencl::closeDevice(OpenClData &data)
+GpuInterface::closeDevice(OpenClData &data)
 {
     LOG_DEBUG("close OpenCL device");
 
@@ -499,10 +419,6 @@ Opencl::closeDevice(OpenClData &data)
     // clear data and free memory on the device
     data.buffer.clear();
 
-    // clear global variables
-    m_device.clear();
-    m_platform.clear();
-
     return true;
 }
 
@@ -512,16 +428,11 @@ Opencl::closeDevice(OpenClData &data)
  * @return size of local memory on device, or 0 if no device is initialized
  */
 uint64_t
-Opencl::getLocalMemorySize()
+GpuInterface::getLocalMemorySize()
 {
-    // precheck
-    if(m_device.size() == 0) {
-        return 0;
-    }
-
     // get information
     cl_ulong size = 0;
-    m_device.at(0).getInfo(CL_DEVICE_LOCAL_MEM_SIZE, &size);
+    m_device.getInfo(CL_DEVICE_LOCAL_MEM_SIZE, &size);
 
     return size;
 }
@@ -532,16 +443,11 @@ Opencl::getLocalMemorySize()
  * @return size of global memory on device, or 0 if no device is initialized
  */
 uint64_t
-Opencl::getGlobalMemorySize()
+GpuInterface::getGlobalMemorySize()
 {
-    // precheck
-    if(m_device.size() == 0) {
-        return 0;
-    }
-
     // get information
     cl_ulong size = 0;
-    m_device.at(0).getInfo(CL_DEVICE_GLOBAL_MEM_SIZE, &size);
+    m_device.getInfo(CL_DEVICE_GLOBAL_MEM_SIZE, &size);
 
     return size;
 }
@@ -552,16 +458,11 @@ Opencl::getGlobalMemorySize()
  * @return maximum at one time allocatable size, or 0 if no device is initialized
  */
 uint64_t
-Opencl::getMaxMemAllocSize()
+GpuInterface::getMaxMemAllocSize()
 {
-    // precheck
-    if(m_device.size() == 0) {
-        return 0;
-    }
-
     // get information
     cl_ulong size = 0;
-    m_device.at(0).getInfo(CL_DEVICE_MAX_MEM_ALLOC_SIZE, &size);
+    m_device.getInfo(CL_DEVICE_MAX_MEM_ALLOC_SIZE, &size);
 
     return size;
 }
@@ -572,16 +473,11 @@ Opencl::getMaxMemAllocSize()
  * @return maximum work-group size
  */
 uint64_t
-Opencl::getMaxWorkGroupSize()
+GpuInterface::getMaxWorkGroupSize()
 {
-    // precheck
-    if(m_device.size() == 0) {
-        return 0;
-    }
-
     // get information
     size_t size = 0;
-    m_device.at(0).getInfo(CL_DEVICE_MAX_WORK_GROUP_SIZE, &size);
+    m_device.getInfo(CL_DEVICE_MAX_WORK_GROUP_SIZE, &size);
 
     return size;
 }
@@ -592,16 +488,11 @@ Opencl::getMaxWorkGroupSize()
  * @return worker-dimension object
  */
 const WorkerDim
-Opencl::getMaxWorkItemSize()
+GpuInterface::getMaxWorkItemSize()
 {
-    // precheck
-    if(m_device.size() == 0) {
-        return WorkerDim();
-    }
-
     // get information
     size_t size[3];
-    m_device.at(0).getInfo(CL_DEVICE_MAX_WORK_ITEM_SIZES, &size);
+    m_device.getInfo(CL_DEVICE_MAX_WORK_ITEM_SIZES, &size);
 
     // create result object
     const uint64_t dimension = getMaxWorkItemDimension();
@@ -625,16 +516,11 @@ Opencl::getMaxWorkItemSize()
  * @return number of dimensions
  */
 uint64_t
-Opencl::getMaxWorkItemDimension()
+GpuInterface::getMaxWorkItemDimension()
 {
-    // precheck
-    if(m_device.size() == 0) {
-        return 0;
-    }
-
     // get information
     cl_uint size = 0;
-    m_device.at(0).getInfo(CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, &size);
+    m_device.getInfo(CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, &size);
 
     return size;
 }
@@ -648,7 +534,7 @@ Opencl::getMaxWorkItemDimension()
  * @return true, if successful, else false
  */
 bool
-Opencl::validateWorkerGroupSize(const OpenClData &data)
+GpuInterface::validateWorkerGroupSize(const OpenClData &data)
 {
     const uint64_t givenSize = data.threadsPerWg.x * data.threadsPerWg.y * data.threadsPerWg.z;
     const uint64_t maxSize = getMaxWorkGroupSize();
@@ -689,64 +575,6 @@ Opencl::validateWorkerGroupSize(const OpenClData &data)
 }
 
 /**
- * @brief collect all available devices
- *
- * @param config object with config-parameter
- */
-bool
-Opencl::collectDevices()
-{
-    // get available platforms
-    std::vector<cl::Platform>::const_iterator plat_it;
-    for(plat_it = m_platform.begin();
-        plat_it != m_platform.end();
-        plat_it++)
-    {
-        // get available devices of the selected platform
-        std::vector<cl::Device> pldev;
-        plat_it->getDevices(CL_DEVICE_TYPE_ALL, &pldev);
-        LOG_DEBUG("number of OpenCL devices: " + std::to_string(pldev.size()));
-
-        // select devices within the platform
-        std::vector<cl::Device>::const_iterator dev_it;
-        for(dev_it = pldev.begin();
-            dev_it != pldev.end();
-            dev_it++)
-        {
-            // check if device is available
-            if(dev_it->getInfo<CL_DEVICE_AVAILABLE>())
-            {
-                /*if(false)
-                {
-                    // check for double precision support
-                    const std::string ext = dev_it->getInfo<CL_DEVICE_EXTENSIONS>();
-                    if(ext.find("cl_khr_fp64") != std::string::npos
-                        && ext.find("cl_amd_fp64") != std::string::npos)
-                    {
-                        m_devices.push_back(*dev_it);
-                        m_context = cl::Context(m_devices);
-                    }
-                }
-                else
-                {*/
-                    // add all devices
-                    m_device.push_back(*dev_it);
-                    m_context = cl::Context(m_device);
-                //}
-            }
-        }
-    }
-
-    if(m_device.size() == 0)
-    {
-        LOG_ERROR("no device found.");
-        return false;
-    }
-
-    return true;
-}
-
-/**
  * @brief build kernel-code
  *
  * @param config object with config-parameter
@@ -754,7 +582,7 @@ Opencl::collectDevices()
  * @return true, if successful, else false
  */
 bool
-Opencl::build(KernelDef &def)
+GpuInterface::build(KernelDef &def)
 {
     // compile opencl program for found device.
     const std::pair<const char*, size_t> kernelCode = std::make_pair(def.kernelCode.c_str(),
@@ -764,12 +592,13 @@ Opencl::build(KernelDef &def)
 
     try
     {
-        program.build(m_device);
+        std::vector<cl::Device> devices = {m_device};
+        program.build(devices);
     }
     catch(const cl::Error&)
     {
         LOG_ERROR("OpenCL compilation error\n    "
-                  + program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_device[0]));
+                  + program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_device));
         return false;
     }
 

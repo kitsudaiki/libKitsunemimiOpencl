@@ -1,5 +1,5 @@
 /**
- * @file        simple_test.h
+ * @file        gpu_handler.h
  *
  * @author      Tobias Anker <tobias.anker@kitsunemimi.moe>
  *
@@ -20,38 +20,38 @@
  *      limitations under the License.
  */
 
-#ifndef TEST_RUN_H
-#define TEST_RUN_H
+#ifndef GPU_HANDLER_H
+#define GPU_HANDLER_H
 
 #include <iostream>
 #include <vector>
+#include <map>
 #include <string>
-#include <chrono>
 
-#include <libKitsunemimiCommon/test_helper/speed_test_helper.h>
+#define __CL_ENABLE_EXCEPTIONS
+#include <CL/cl.hpp>
 
 namespace Kitsunemimi
 {
 namespace Opencl
 {
+class GpuInterface;
 
-class SimpleTest
-        : public Kitsunemimi::SpeedTestHelper
+class GpuHandler
 {
 public:
-    SimpleTest();
+    GpuHandler();
 
-    void simple_test();
+    std::vector<GpuInterface*> m_interfaces;
 
-    TimerSlot m_copyToDeviceTimeSlot;
-    TimerSlot m_initKernelTimeSlot;
-    TimerSlot m_runTimeSlot;
-    TimerSlot m_updateTimeSlot;
-    TimerSlot m_copyToHostTimeSlot;
-    TimerSlot m_cleanupTimeSlot;
+private:
+    std::vector<cl::Platform> m_platform;
+
+    bool initDevice();
+    void collectDevices();
 };
 
 }
 }
 
-#endif // TEST_RUN_H
+#endif // GPU_HANDLER_H

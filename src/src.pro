@@ -22,7 +22,9 @@ INCLUDEPATH += $$PWD \
                $$PWD/../include
 
 HEADERS += \
-    ../include/libKitsunemimiOpencl/opencl.h
+    ../include/libKitsunemimiOpencl/gpu_interface.h \
+    ../include/libKitsunemimiOpencl/gpu_handler.h
 
 SOURCES += \
-    opencl.cpp
+    gpu_interface.cpp \
+    gpu_handler.cpp

@@ -22,7 +22,8 @@
 
 #include "simple_test.h"
 
-#include <libKitsunemimiOpencl/opencl.h>
+#include <libKitsunemimiOpencl/gpu_interface.h>
+#include <libKitsunemimiOpencl/gpu_handler.h>
 
 namespace Kitsunemimi
 {
@@ -38,7 +39,7 @@ SimpleTest::SimpleTest()
 void
 SimpleTest::simple_test()
 {
-    const size_t N = 1 << 27;
+    const size_t testSize = 1 << 27;
 
     // example kernel for task: c = a + b.
     const std::string kernelCode =
@@ -67,78 +68,81 @@ SimpleTest::simple_test()
         "    }\n"
         "}\n";
 
-    Kitsunemimi::Opencl::Opencl ocl;
+    Kitsunemimi::Opencl::GpuHandler oclHandler;
+
+    TEST_NOT_EQUAL(oclHandler.m_interfaces.size(), 0);
+
+    Kitsunemimi::Opencl::GpuInterface* ocl = oclHandler.m_interfaces.at(0);
 
     // create data-object
     Kitsunemimi::Opencl::OpenClData data;
 
-    data.numberOfWg.x = N / 512;
+    data.numberOfWg.x = testSize / 512;
     data.numberOfWg.y = 2;
     data.threadsPerWg.x = 256;
 
     // init empty buffer
-    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float), false, true));
-    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float), false, true));
-    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float), true, true));
+    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), false, true));
+    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), false, true));
+    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), true, true));
 
     // convert pointer
     float* a = static_cast<float*>(data.buffer[0].data);
     float* b = static_cast<float*>(data.buffer[1].data);
 
     // write intput dat into buffer
-    for(uint32_t i = 0; i < N; i++)
+    for(uint32_t i = 0; i < testSize; i++)
     {
         a[i] = 1.0f;
         b[i] = 2.0f;
     }
 
     // run
-    TEST_EQUAL(ocl.initDevice(), true);
-    TEST_EQUAL(ocl.initCopyToDevice(data), true);
-    TEST_EQUAL(ocl.addKernel("add", kernelCode), true);
-    TEST_EQUAL(ocl.bindKernelToBuffer("add", 0, data), true);
-    TEST_EQUAL(ocl.bindKernelToBuffer("add", 1, data), true);
-    TEST_EQUAL(ocl.bindKernelToBuffer("add", 2, data), true);
-    TEST_EQUAL(ocl.setLocalMemory("add", 256*256), true);
-    TEST_EQUAL(ocl.run(data, "add"), true);
-    TEST_EQUAL(ocl.copyFromDevice(data), true);
+    TEST_EQUAL(ocl->initCopyToDevice(data), true);
+    TEST_EQUAL(ocl->addKernel("add", kernelCode), true);
+    TEST_EQUAL(ocl->bindKernelToBuffer("add", 0, data), true);
+    TEST_EQUAL(ocl->bindKernelToBuffer("add", 1, data), true);
+    TEST_EQUAL(ocl->bindKernelToBuffer("add", 2, data), true);
+    TEST_EQUAL(ocl->setLocalMemory("add", 256*256), true);
+    TEST_EQUAL(ocl->run(data, "add"), true);
+    TEST_EQUAL(ocl->copyFromDevice(data), true);
 
     // check result
     float* outputValues = static_cast<float*>(data.buffer[2].data);
     TEST_EQUAL(outputValues[42], 3.0f);;
 
     // update data on host
-    for(uint32_t i = 0; i < N; i++)
+    for(uint32_t i = 0; i < testSize; i++)
     {
         a[i] = 5.0f;
     }
 
     // update data on device
-    TEST_EQUAL(ocl.updateBufferOnDevice("add", 0), true);
+    TEST_EQUAL(ocl->updateBufferOnDevice("add", 0), true);
 
     // second run
-    TEST_EQUAL(ocl.run(data, "add"), true);
+    TEST_EQUAL(ocl->run(data, "add"), true);
     // copy new output back
-    TEST_EQUAL(ocl.copyFromDevice(data), true);
+    TEST_EQUAL(ocl->copyFromDevice(data), true);
 
     // check new result
     outputValues = static_cast<float*>(data.buffer[2].data);
     TEST_EQUAL(outputValues[42], 7.0f);
 
     // test memory getter
-    TEST_NOT_EQUAL(ocl.getLocalMemorySize(), 0);
-    TEST_NOT_EQUAL(ocl.getGlobalMemorySize(), 0);
-    TEST_NOT_EQUAL(ocl.getMaxMemAllocSize(), 0);
+    TEST_NOT_EQUAL(ocl->getLocalMemorySize(), 0);
+    TEST_NOT_EQUAL(ocl->getGlobalMemorySize(), 0);
+    TEST_NOT_EQUAL(ocl->getMaxMemAllocSize(), 0);
 
     // test work group getter
-    TEST_NOT_EQUAL(ocl.getMaxWorkGroupSize(), 0);
-    TEST_NOT_EQUAL(ocl.getMaxWorkItemDimension(), 0);
-    TEST_NOT_EQUAL(ocl.getMaxWorkItemSize().x, 0);
-    TEST_NOT_EQUAL(ocl.getMaxWorkItemSize().y, 0);
-    TEST_NOT_EQUAL(ocl.getMaxWorkItemSize().z, 0);
+    TEST_NOT_EQUAL(ocl->getMaxWorkGroupSize(), 0);
+    TEST_NOT_EQUAL(ocl->getMaxWorkItemDimension(), 0);
+    TEST_NOT_EQUAL(ocl->getMaxWorkItemSize().x, 0);
+    TEST_NOT_EQUAL(ocl->getMaxWorkItemSize().y, 0);
+    TEST_NOT_EQUAL(ocl->getMaxWorkItemSize().z, 0);
 
     // test close
-    TEST_EQUAL(ocl.closeDevice(data), true);
+    TEST_EQUAL(ocl->closeDevice(data), true);
 }
 
 }

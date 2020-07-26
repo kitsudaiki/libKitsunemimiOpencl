@@ -1,5 +1,5 @@
 /**
- * @file        opencl.h
+ * @file        gpu_interface.h
  *
  * @author      Tobias Anker <tobias.anker@kitsunemimi.moe>
  *
@@ -76,14 +76,13 @@ struct OpenClData
 };
 
 
-class Opencl
+class GpuInterface
 {
 public:
-    Opencl();
-    ~Opencl();
+    GpuInterface(const cl::Device &device);
+    ~GpuInterface();
 
     // initializing
-    bool initDevice();
     bool initCopyToDevice(OpenClData &data);
 
     bool addKernel(const std::string &id,
@@ -126,15 +125,13 @@ private:
         uint32_t argumentCounter = 0;
     };
 
-    std::vector<cl::Platform> m_platform;
-    std::vector<cl::Device> m_device;
+    cl::Device m_device;
     std::map<std::string, KernelDef> m_kernel;
 
     cl::Context m_context;
     cl::CommandQueue m_queue;
 
     bool validateWorkerGroupSize(const OpenClData &data);
-    bool collectDevices();
     bool build(KernelDef &def);
 };
 
