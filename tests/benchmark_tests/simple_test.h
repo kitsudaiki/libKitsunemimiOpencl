@@ -45,6 +45,7 @@ public:
 
     TimerSlot m_initTimeSlot;
     TimerSlot m_copyToDeviceTimeSlot;
+    TimerSlot m_initKernelTimeSlot;
     TimerSlot m_runTimeSlot;
     TimerSlot m_updateTimeSlot;
     TimerSlot m_copyToHostTimeSlot;

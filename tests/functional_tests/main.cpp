@@ -29,7 +29,7 @@
 
 int main()
 {
-    // Kitsunemimi::Persistence::initConsoleLogger(true);
+    Kitsunemimi::Persistence::initConsoleLogger(true);
 
     Kitsunemimi::Opencl::SimpleTest();
 }

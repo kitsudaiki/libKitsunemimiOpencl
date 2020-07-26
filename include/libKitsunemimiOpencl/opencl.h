@@ -30,13 +30,51 @@
 
 #define __CL_ENABLE_EXCEPTIONS
 #include <CL/cl.hpp>
-
-#include <libKitsunemimiOpencl/opencl_items.h>
+#include <libKitsunemimiCommon/buffer/data_buffer.h>
 
 namespace Kitsunemimi
 {
 namespace Opencl
 {
+
+struct WorkerDim
+{
+    uint64_t x = 1;
+    uint64_t y = 1;
+    uint64_t z = 1;
+};
+
+struct WorkerBuffer
+{
+    void* data = nullptr;
+    uint64_t numberOfBytes = 0;
+    uint64_t numberOfObjects = 0;
+    bool isOutput = false;
+    bool useHostPtr = false;
+    cl::Buffer clBuffer;
+
+    WorkerBuffer() {}
+
+    WorkerBuffer(const uint64_t numberOfObjects,
+                 const uint64_t objectSize,
+                 const bool isOutput = false,
+                 const bool useHostPtr = false)
+    {
+        this->numberOfBytes = numberOfObjects * objectSize;
+        this->data = Kitsunemimi::alignedMalloc(4096, numberOfBytes);
+        this->numberOfObjects = numberOfObjects;
+        this->isOutput = isOutput;
+        this->useHostPtr = useHostPtr;
+    }
+};
+
+struct OpenClData
+{
+    WorkerDim numberOfWg;
+    WorkerDim threadsPerWg;
+    std::vector<WorkerBuffer> buffer;
+};
+
 
 class Opencl
 {
@@ -44,15 +82,28 @@ public:
     Opencl();
     ~Opencl();
 
-    // device-interaction
-    bool initDevice(const OpenClConfig &config);
+    // initializing
+    bool initDevice();
     bool initCopyToDevice(OpenClData &data);
-    bool updateBufferOnDevice(WorkerBuffer &buffer,
+
+    bool addKernel(const std::string &id,
+                   const std::string &kernelCode);
+    bool bindKernelToBuffer(const std::string &kernelId,
+                            const uint32_t bufferId,
+                            OpenClData &data);
+    bool setLocalMemory(const std::string &kernelId,
+                        const uint32_t localMemorySize);
+
+    bool closeDevice(OpenClData &data);
+
+    // runtime
+    bool updateBufferOnDevice(const std::string &kernelId,
+                              const uint32_t bufferId,
                               uint64_t numberOfObjects = 0xFFFFFFFFFFFFFFFF,
                               const uint64_t offset = 0);
-    bool run(OpenClData &data, const std::string &kernelName);
+    bool run(OpenClData &data,
+             const std::string &kernelName);
     bool copyFromDevice(OpenClData &data);
-    bool closeDevice(OpenClData &data);
 
     // getter for memory information
     uint64_t getLocalMemorySize();
@@ -61,23 +112,30 @@ public:
 
     // getter for work-group information
     uint64_t getMaxWorkGroupSize();
-    WorkerDim getMaxWorkItemSize();
+    const WorkerDim getMaxWorkItemSize();
     uint64_t getMaxWorkItemDimension();
 
-    // opencl objects
-    // I left these public for the case, that there have to be some specific operations have to be
-    // performed, which are not possible or available with the generic functions of this library.
+private:
+    struct KernelDef
+    {
+        std::string id = "";
+        std::string kernelCode = "";
+        cl::Kernel kernel;
+        std::vector<WorkerBuffer*> bufferLinks;
+        uint32_t localBufferSize = 0;
+        uint32_t argumentCounter = 0;
+    };
+
     std::vector<cl::Platform> m_platform;
     std::vector<cl::Device> m_device;
-    cl::Context m_context;
-    std::map<std::string, cl::Kernel> m_kernel;
-    cl::CommandQueue m_queue;
-    uint32_t m_argCounter = 0;
+    std::map<std::string, KernelDef> m_kernel;
 
-private:
+    cl::Context m_context;
+    cl::CommandQueue m_queue;
+
     bool validateWorkerGroupSize(const OpenClData &data);
-    void collectDevices(const OpenClConfig &config);
-    bool build(const OpenClConfig &config);
+    bool collectDevices();
+    bool build(KernelDef &def);
 };
 
 }

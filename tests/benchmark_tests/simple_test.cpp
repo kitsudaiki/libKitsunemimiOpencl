@@ -38,6 +38,9 @@ SimpleTest::SimpleTest()
     m_copyToDeviceTimeSlot.unitName = "ms";
     m_copyToDeviceTimeSlot.name = "copy to device";
 
+    m_initKernelTimeSlot.unitName = "ms";
+    m_initKernelTimeSlot.name = "init kernel";
+
     m_runTimeSlot.unitName = "ms";
     m_runTimeSlot.name = "run test";
 
@@ -60,6 +63,8 @@ SimpleTest::SimpleTest()
                     m_initTimeSlot.getDuration(MICRO_SECONDS) / 1000.0);
         m_copyToDeviceTimeSlot.values.push_back(
                     m_copyToDeviceTimeSlot.getDuration(MICRO_SECONDS) / 1000.0);
+        m_initKernelTimeSlot.values.push_back(
+                    m_initKernelTimeSlot.getDuration(MICRO_SECONDS) / 1000.0);
         m_runTimeSlot.values.push_back(
                     m_runTimeSlot.getDuration(MICRO_SECONDS) / 1000.0);
         m_updateTimeSlot.values.push_back(
@@ -72,6 +77,7 @@ SimpleTest::SimpleTest()
 
     addToResult(m_initTimeSlot);
     addToResult(m_copyToDeviceTimeSlot);
+    addToResult(m_initKernelTimeSlot);
     addToResult(m_runTimeSlot);
     addToResult(m_updateTimeSlot);
     addToResult(m_copyToHostTimeSlot);
@@ -112,10 +118,6 @@ SimpleTest::simple_test()
 
     Kitsunemimi::Opencl::Opencl ocl;
 
-    // create config-object
-    Kitsunemimi::Opencl::OpenClConfig config;
-    config.kernelDefinition.insert(std::make_pair("add", kernelCode));
-
     // create data-object
     Kitsunemimi::Opencl::OpenClData data;
 
@@ -141,13 +143,20 @@ SimpleTest::simple_test()
 
     // init
     m_initTimeSlot.startTimer();
-    assert(ocl.initDevice(config));
+    assert(ocl.initDevice());
     m_initTimeSlot.stopTimer();
 
     // copy to device
     m_copyToDeviceTimeSlot.startTimer();
     assert(ocl.initCopyToDevice(data));
     m_copyToDeviceTimeSlot.stopTimer();
+
+    m_initKernelTimeSlot.startTimer();
+    assert(ocl.addKernel("add", kernelCode));
+    assert(ocl.bindKernelToBuffer("add", 0, data));
+    assert(ocl.bindKernelToBuffer("add", 1, data));
+    assert(ocl.bindKernelToBuffer("add", 2, data));
+    m_initKernelTimeSlot.stopTimer();
 
     // run
     m_runTimeSlot.startTimer();
@@ -167,7 +176,7 @@ SimpleTest::simple_test()
 
     // update data on device
     m_updateTimeSlot.startTimer();
-    assert(ocl.updateBufferOnDevice(data.buffer[0]));
+    assert(ocl.updateBufferOnDevice("add", 0));
     m_updateTimeSlot.stopTimer();
 
     // clear device

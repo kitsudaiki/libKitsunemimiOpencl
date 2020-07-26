@@ -69,10 +69,6 @@ SimpleTest::simple_test()
 
     Kitsunemimi::Opencl::Opencl ocl;
 
-    // create config-object
-    Kitsunemimi::Opencl::OpenClConfig config;
-    config.kernelDefinition.insert(std::make_pair("add", kernelCode));
-
     // create data-object
     Kitsunemimi::Opencl::OpenClData data;
 
@@ -84,7 +80,6 @@ SimpleTest::simple_test()
     data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float), false, true));
     data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float), false, true));
     data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float), true, true));
-    data.localMemorySize = 256*256;
 
     // convert pointer
     float* a = static_cast<float*>(data.buffer[0].data);
@@ -98,8 +93,13 @@ SimpleTest::simple_test()
     }
 
     // run
-    TEST_EQUAL(ocl.initDevice(config), true);
+    TEST_EQUAL(ocl.initDevice(), true);
     TEST_EQUAL(ocl.initCopyToDevice(data), true);
+    TEST_EQUAL(ocl.addKernel("add", kernelCode), true);
+    TEST_EQUAL(ocl.bindKernelToBuffer("add", 0, data), true);
+    TEST_EQUAL(ocl.bindKernelToBuffer("add", 1, data), true);
+    TEST_EQUAL(ocl.bindKernelToBuffer("add", 2, data), true);
+    TEST_EQUAL(ocl.setLocalMemory("add", 256*256), true);
     TEST_EQUAL(ocl.run(data, "add"), true);
     TEST_EQUAL(ocl.copyFromDevice(data), true);
 
@@ -114,7 +114,7 @@ SimpleTest::simple_test()
     }
 
     // update data on device
-    TEST_EQUAL(ocl.updateBufferOnDevice(data.buffer[0]), true);
+    TEST_EQUAL(ocl.updateBufferOnDevice("add", 0), true);
 
     // second run
     TEST_EQUAL(ocl.run(data, "add"), true);
