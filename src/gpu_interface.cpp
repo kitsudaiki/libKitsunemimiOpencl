@@ -120,7 +120,7 @@ GpuInterface::initCopyToDevice(OpenClData &data)
  */
 bool
 GpuInterface::addKernel(const std::string &id,
-                  const std::string &kernelCode)
+                        const std::string &kernelCode)
 {
     LOG_DEBUG("add kernel with id: " + id);
 
@@ -159,8 +159,8 @@ GpuInterface::addKernel(const std::string &id,
  */
 bool
 GpuInterface::bindKernelToBuffer(const std::string &kernelId,
-                           const uint32_t bufferId,
-                           OpenClData &data)
+                                 const uint32_t bufferId,
+                                 OpenClData &data)
 {
     LOG_DEBUG("bind buffer number " + std::to_string(bufferId) + " kernel with id: " + kernelId);
 
@@ -206,7 +206,7 @@ GpuInterface::bindKernelToBuffer(const std::string &kernelId,
  */
 bool
 GpuInterface::setLocalMemory(const std::string &kernelId,
-                       const uint32_t localMemorySize)
+                             const uint32_t localMemorySize)
 {
     std::map<std::string, KernelDef>::iterator it;
     it = m_kernel.find(kernelId);
@@ -237,9 +237,9 @@ GpuInterface::setLocalMemory(const std::string &kernelId,
  */
 bool
 GpuInterface::updateBufferOnDevice(const std::string &kernelId,
-                             const uint32_t bufferId,
-                             uint64_t numberOfObjects,
-                             const uint64_t offset)
+                                   const uint32_t bufferId,
+                                   uint64_t numberOfObjects,
+                                   const uint64_t offset)
 {
     LOG_DEBUG("update buffer on OpenCL device");
 
@@ -304,8 +304,8 @@ GpuInterface::updateBufferOnDevice(const std::string &kernelId,
  * @return true, if successful, else false
  */
 bool
-GpuInterface::run(OpenClData &data,
-            const std::string &kernelName)
+GpuInterface::run(const std::string &kernelName,
+                  OpenClData &data)
 {
     LOG_DEBUG("run kernel on OpenCL device");
 

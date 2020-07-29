@@ -156,7 +156,7 @@ SimpleTest::simple_test()
 
     // run
     m_runTimeSlot.startTimer();
-    assert(ocl->run(data, "add"));
+    assert(ocl->run("add", data));
     m_runTimeSlot.stopTimer();
 
     // copy output back

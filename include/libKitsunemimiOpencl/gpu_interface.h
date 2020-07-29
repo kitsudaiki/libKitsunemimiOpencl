@@ -100,8 +100,8 @@ public:
                               const uint32_t bufferId,
                               uint64_t numberOfObjects = 0xFFFFFFFFFFFFFFFF,
                               const uint64_t offset = 0);
-    bool run(OpenClData &data,
-             const std::string &kernelName);
+    bool run(const std::string &kernelName,
+             OpenClData &data);
     bool copyFromDevice(OpenClData &data);
 
     // common getter
