@@ -85,18 +85,18 @@ public:
     // initializing
     bool initCopyToDevice(OpenClData &data);
 
-    bool addKernel(const std::string &id,
+    bool addKernel(const std::string &kernelName,
                    const std::string &kernelCode);
-    bool bindKernelToBuffer(const std::string &kernelId,
+    bool bindKernelToBuffer(const std::string &kernelName,
                             const uint32_t bufferId,
                             OpenClData &data);
-    bool setLocalMemory(const std::string &kernelId,
+    bool setLocalMemory(const std::string &kernelName,
                         const uint32_t localMemorySize);
 
     bool closeDevice(OpenClData &data);
 
     // runtime
-    bool updateBufferOnDevice(const std::string &kernelId,
+    bool updateBufferOnDevice(const std::string &kernelName,
                               const uint32_t bufferId,
                               uint64_t numberOfObjects = 0xFFFFFFFFFFFFFFFF,
                               const uint64_t offset = 0);
