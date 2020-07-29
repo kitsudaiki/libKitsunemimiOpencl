@@ -22,7 +22,8 @@
 
 #include "simple_test.h"
 
-#include <libKitsunemimiOpencl/opencl.h>
+#include <libKitsunemimiOpencl/gpu_interface.h>
+#include <libKitsunemimiOpencl/gpu_handler.h>
 
 namespace Kitsunemimi
 {
@@ -32,11 +33,11 @@ namespace Opencl
 SimpleTest::SimpleTest()
     : Kitsunemimi::SpeedTestHelper()
 {
-    m_initTimeSlot.unitName = "ms";
-    m_initTimeSlot.name = "init";
-
     m_copyToDeviceTimeSlot.unitName = "ms";
     m_copyToDeviceTimeSlot.name = "copy to device";
+
+    m_initKernelTimeSlot.unitName = "ms";
+    m_initKernelTimeSlot.name = "init kernel";
 
     m_runTimeSlot.unitName = "ms";
     m_runTimeSlot.name = "run test";
@@ -50,16 +51,21 @@ SimpleTest::SimpleTest()
     m_cleanupTimeSlot.unitName = "ms";
     m_cleanupTimeSlot.name = "cleanup";
 
+    m_oclHandler = new Kitsunemimi::Opencl::GpuHandler();
+    assert(m_oclHandler->m_interfaces.size() != 0);
+
+    chooseDevice();
+
     for(uint32_t i = 0; i < 10; i++)
     {
         std::cout<<"run cycle "<<(i + 1)<<std::endl;
 
         simple_test();
 
-        m_initTimeSlot.values.push_back(
-                    m_initTimeSlot.getDuration(MICRO_SECONDS) / 1000.0);
         m_copyToDeviceTimeSlot.values.push_back(
                     m_copyToDeviceTimeSlot.getDuration(MICRO_SECONDS) / 1000.0);
+        m_initKernelTimeSlot.values.push_back(
+                    m_initKernelTimeSlot.getDuration(MICRO_SECONDS) / 1000.0);
         m_runTimeSlot.values.push_back(
                     m_runTimeSlot.getDuration(MICRO_SECONDS) / 1000.0);
         m_updateTimeSlot.values.push_back(
@@ -70,8 +76,8 @@ SimpleTest::SimpleTest()
                     m_cleanupTimeSlot.getDuration(MICRO_SECONDS) / 1000.0);
     }
 
-    addToResult(m_initTimeSlot);
     addToResult(m_copyToDeviceTimeSlot);
+    addToResult(m_initKernelTimeSlot);
     addToResult(m_runTimeSlot);
     addToResult(m_updateTimeSlot);
     addToResult(m_copyToHostTimeSlot);
@@ -83,7 +89,7 @@ SimpleTest::SimpleTest()
 void
 SimpleTest::simple_test()
 {
-    const size_t N = 1 << 27;
+    const size_t testSize = 1 << 28;
 
     // example kernel for task: c = a + b.
     const std::string kernelCode =
@@ -110,70 +116,85 @@ SimpleTest::simple_test()
         "    }\n"
         "}\n";
 
-    Kitsunemimi::Opencl::Opencl ocl;
-
-    // create config-object
-    Kitsunemimi::Opencl::OpenClConfig config;
-    config.kernelDefinition.insert(std::make_pair("add", kernelCode));
+    Kitsunemimi::Opencl::GpuHandler oclHandler;
+    Kitsunemimi::Opencl::GpuInterface* ocl = oclHandler.m_interfaces.at(m_id);
 
     // create data-object
     Kitsunemimi::Opencl::OpenClData data;
 
-    data.numberOfWg.x = N / 512;
+    data.numberOfWg.x = testSize / 512;
     data.numberOfWg.y = 2;
     data.threadsPerWg.x = 256;
 
     // init empty buffer
-    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float), false, true));
-    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float), false, true));
-    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, sizeof(float), true, true));
+    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), false, true));
+    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), false, true));
+    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), true, true));
 
     // convert pointer
     float* a = static_cast<float*>(data.buffer[0].data);
     float* b = static_cast<float*>(data.buffer[1].data);
 
     // write intput dat into buffer
-    for(uint32_t i = 0; i < N; i++)
+    for(uint32_t i = 0; i < testSize; i++)
     {
         a[i] = 1.0f;
         b[i] = 2.0f;
     }
 
-    // init
-    m_initTimeSlot.startTimer();
-    assert(ocl.initDevice(config));
-    m_initTimeSlot.stopTimer();
-
     // copy to device
     m_copyToDeviceTimeSlot.startTimer();
-    assert(ocl.initCopyToDevice(data));
+    assert(ocl->initCopyToDevice(data));
     m_copyToDeviceTimeSlot.stopTimer();
+
+    m_initKernelTimeSlot.startTimer();
+    assert(ocl->addKernel("add", kernelCode));
+    assert(ocl->bindKernelToBuffer("add", 0, data));
+    assert(ocl->bindKernelToBuffer("add", 1, data));
+    assert(ocl->bindKernelToBuffer("add", 2, data));
+    m_initKernelTimeSlot.stopTimer();
 
     // run
     m_runTimeSlot.startTimer();
-    assert(ocl.run(data, "add"));
+    assert(ocl->run("add", data));
     m_runTimeSlot.stopTimer();
 
     // copy output back
     m_copyToHostTimeSlot.startTimer();
-    assert(ocl.copyFromDevice(data));
+    assert(ocl->copyFromDevice(data));
     m_copyToHostTimeSlot.stopTimer();
 
     // update data on host
-    for(uint32_t i = 0; i < N; i++)
+    for(uint32_t i = 0; i < testSize; i++)
     {
         a[i] = 5.0f;
     }
 
     // update data on device
     m_updateTimeSlot.startTimer();
-    assert(ocl.updateBufferOnDevice(data.buffer[0]));
+    assert(ocl->updateBufferOnDevice("add", 0));
     m_updateTimeSlot.stopTimer();
 
     // clear device
     m_cleanupTimeSlot.startTimer();
-    assert(ocl.closeDevice(data));
+    assert(ocl->closeDevice(data));
     m_cleanupTimeSlot.stopTimer();
+}
+
+void
+SimpleTest::chooseDevice()
+{
+    std::cout<<"found devices:"<<std::endl;
+    for(uint32_t i = 0; i < m_oclHandler->m_interfaces.size(); i++)
+    {
+        std::cout<<"    "<<i<<": "<<m_oclHandler->m_interfaces.at(i)->getDeviceName()<<std::endl;
+    }
+
+    while(m_id >= m_oclHandler->m_interfaces.size())
+    {
+        std::cout<<"wait for input: ";
+        std::cin>>m_id;
+    }
 }
 
 }

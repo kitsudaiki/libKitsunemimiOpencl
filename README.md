@@ -107,7 +107,8 @@ The copy process for the library from host to device copies always at first the 
 
 
 ```cpp
-#include <libKitsunemimiOpencl/opencl.h>
+#include <libKitsunemimiOpencl/gpu_handler.h>
+#include <libKitsunemimiOpencl/gpu_interface.h>
 
 // Optional  initialize the logger. This here initalize a console logger, 
 // which prints all error- and info-messages on the consol
@@ -115,23 +116,13 @@ The copy process for the library from host to device copies always at first the 
 Kitsunemimi::Persistence::initConsoleLogger();
 
 // init opencl-class of this library
-Kitsunemimi::Opencl::Opencl ocl;
+Kitsunemimi::Opencl::GpuHandler oclHandler;
+// the GpuHandler collect all devices of the host and stores them 
+// into oclHandler.m_interfaces
+
+// get for example the first device
+Kitsunemimi::Opencl::GpuInterface* ocl = oclHandler.m_interfaces.at(0);
 // this ocl-object here will be used in all the following snippets
-```
-
-Initializing the opencl-object by selecting a device and register and build the kernel-code.
-
-```cpp
-// create config-object to init device
-Kitsunemimi::Opencl::OpenClConfig config;
-// set kernel-code from above
-config.kernelCode = kernelCode;		
-// name of the kernel-function inside the kernel-code 
-config.kernelName = "test_kernel";
-
-// init device
-bool ret = ocl.initDevice(config);
-// false, if fails for example because no opencl-device was found
 ```
 
 Prepare buffer for data-transfers between the host and the device.
@@ -179,10 +170,18 @@ In the main-part copy the data to the device and process them on the device.
 bool ret = false;
 
 // copy the data of OpenClData-object, which was initialized in the snipped before 
-ret = ocl.initCopyToDevice(data);
+ret = ocl->initCopyToDevice(data);
+
+// add kernel-code with name to device
+ret = ocl->addKernel("test_kernel", kernelCode)
+// you can all multiple kernel to the device and its queue
+
+// bind buffer 0 and 1 to the kernel
+ret = ocl->bindKernelToBuffer("test_kernel", 0, data);
+ret = ocl->bindKernelToBuffer("test_kernel", 1, data);
 
 // run kernel-code this the data
-ret = ocl.run(data);
+ret = ocl.run("test_kernel", data);
 
 // copy all as output-buffer defined buffer from device back to host
 ret = ocl.copyFromDevice(data);
@@ -204,7 +203,7 @@ for(uint32_t i = 0; i < N; i++)
 }
 
 // updata this on the host changed buffer also on the device with the following command
-ret = ocl.updateBufferOnDevice(data.buffer[0])
+ocl->updateBufferOnDevice("test_kernel", 0);
 
 // run the kernel again and copy the result back again.
 ret = ocl.run(data);
