@@ -28,7 +28,7 @@ function build_kitsune_lib_repo () {
     /usr/bin/make -j$NUMBER_OF_THREADS
 
     # copy build-result and include-files into the result-directory
-    cp -d $REPO_DIR/src/$REPO_NAME.so.* $RESULT_DIR/
+    cp $REPO_DIR/src/$REPO_NAME.a $RESULT_DIR/
     cp -r $PARENT_DIR/$REPO_NAME/include $RESULT_DIR/
 }
 
@@ -47,7 +47,7 @@ function get_required_kitsune_lib_repo () {
 
 #-----------------------------------------------------------------------------------------------------------------
 
-get_required_kitsune_lib_repo "libKitsunemimiCommon" "master" 4
+get_required_kitsune_lib_repo "libKitsunemimiCommon" "reset-memory-counter" 4
 
 get_required_kitsune_lib_repo "libKitsunemimiPersistence" "master" 4
 

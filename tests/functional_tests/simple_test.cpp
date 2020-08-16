@@ -39,7 +39,7 @@ SimpleTest::SimpleTest()
 void
 SimpleTest::simple_test()
 {
-    const size_t testSize = 1 << 27;
+    const size_t testSize = 1 << 20;
 
     // example kernel for task: c = a + b.
     const std::string kernelCode =
@@ -49,12 +49,9 @@ SimpleTest::simple_test()
         "       __global const float* b,\n"
         "       ulong n2,\n"
         "       __global float* c,\n"
-        "       ulong out,\n"
-        "       __local uchar* localMemory,\n"
-        "       const ulong localMemorySize\n"
+        "       ulong out\n"
         "       )\n"
         "{\n"
-        "    __local float temp[512];\n"
         "    size_t globalId_x = get_global_id(0);\n"
         "    int localId_x = get_local_id(0);\n"
         "    size_t globalSize_x = get_global_size(0);\n"
@@ -63,8 +60,7 @@ SimpleTest::simple_test()
         "    size_t globalId = get_global_id(0) + get_global_size(0) * get_global_id(1);\n"
         "    if (globalId < n1)\n"
         "    {\n"
-        "       temp[localId_x] = b[globalId];\n"
-        "       c[globalId] = a[globalId] + temp[localId_x];"
+        "       c[globalId] = a[globalId] + b[globalId];"
         "    }\n"
         "}\n";
 
@@ -77,9 +73,9 @@ SimpleTest::simple_test()
     // create data-object
     Kitsunemimi::Opencl::OpenClData data;
 
-    data.numberOfWg.x = testSize / 512;
-    data.numberOfWg.y = 2;
-    data.threadsPerWg.x = 256;
+    data.numberOfWg.x = testSize / 128;
+    data.numberOfWg.y = 1;
+    data.threadsPerWg.x = 128;
 
     // init empty buffer
     data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), false, true));
@@ -103,7 +99,7 @@ SimpleTest::simple_test()
     TEST_EQUAL(ocl->bindKernelToBuffer("add", 0, data), true);
     TEST_EQUAL(ocl->bindKernelToBuffer("add", 1, data), true);
     TEST_EQUAL(ocl->bindKernelToBuffer("add", 2, data), true);
-    TEST_EQUAL(ocl->setLocalMemory("add", 256*256), true);
+    //TEST_EQUAL(ocl->setLocalMemory("add", 256*256), true);
     TEST_EQUAL(ocl->run("add", data), true);
     TEST_EQUAL(ocl->copyFromDevice(data), true);
 

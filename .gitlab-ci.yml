@@ -1,14 +1,23 @@
 image: registry.gitlab.com/kitsune_other/kitsune_docker_unittest:0.1.2
 
+
 build:
   script:
     - echo Working on branch $CI_COMMIT_REF_NAME
 
     - apt-get update
-    - apt-get install -y libboost-filesystem-dev opencl-headers ocl-icd-opencl-dev
+    - apt-get install -y libboost-filesystem-dev opencl-headers ocl-icd-opencl-dev curl apt-utils unzip tar curl xz-utils wget clinfo
 
+    - cd /tmp
+    - curl --referer https://drivers.amd.com/drivers/linux -O https://drivers.amd.com/drivers/linux/amdgpu-pro-20.30-1109583-ubuntu-18.04.tar.xz
+    - tar -Jxvf amdgpu-pro-20.30-1109583-ubuntu-18.04.tar.xz
+    - cd amdgpu-pro-20.30-1109583-ubuntu-18.04/
+    - ./amdgpu-install -y  --headless  --opencl=legacy
     - cd /builds/tobiasanker/libKitsunemimiOpencl
     - ./build.sh
+    - clinfo
+    - /builds/tobiasanker/build/libKitsunemimiOpencl/tests/functional_tests/functional_tests
 
   tags:
     - docker
+    - opencl
