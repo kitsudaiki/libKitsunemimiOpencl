@@ -1,7 +1,11 @@
 image: registry.gitlab.com/kitsudaiki/kitsunemimi-ci-docker-images/opencl-tests:1.0.0
 
+stages:
+  - build
+  - test
 
 build:
+  stage: build
   script:
     - echo Working on branch $CI_COMMIT_REF_NAME
 
@@ -10,9 +14,28 @@ build:
 
     - cd /builds/kitsudaiki/libKitsunemimiOpencl
     - ./build.sh
-    - clinfo
-    - /builds/kitsudaiki/build/libKitsunemimiOpencl/tests/functional_tests/functional_tests
 
+    - mkdir upload
+
+    - cp -r ../result/* upload/
+    - cp ../build/libKitsunemimiOpencl/tests/functional_tests/functional_tests upload/
+  artifacts:
+    paths:
+      - upload
+    expire_in: 1 week
+  tags:
+    - docker
+    - opencl
+
+functional_test:
+  stage: test
+  script:
+    - ls -l
+    - apt-get update
+    - apt-get install -y libboost-filesystem-dev
+    - upload/functional_tests
+  dependencies:
+    - build
   tags:
     - docker
     - opencl
