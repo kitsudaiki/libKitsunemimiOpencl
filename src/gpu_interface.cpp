@@ -252,7 +252,7 @@ GpuInterface::updateBufferOnDevice(const std::string &kernelName,
                                    uint64_t numberOfObjects,
                                    const uint64_t offset)
 {
-    LOG_DEBUG("update buffer on OpenCL device");
+    //LOG_DEBUG("update buffer on OpenCL device");
 
     // get kernel-data
     std::map<std::string, KernelDef>::iterator it;
@@ -320,7 +320,7 @@ bool
 GpuInterface::run(const std::string &kernelName,
                   OpenClData &data)
 {
-    LOG_DEBUG("run kernel on OpenCL device");
+    //LOG_DEBUG("run kernel on OpenCL device");
 
     // precheck
     if(validateWorkerGroupSize(data) == false) {
@@ -378,7 +378,7 @@ GpuInterface::run(const std::string &kernelName,
 bool
 GpuInterface::copyFromDevice(OpenClData &data)
 {
-    LOG_DEBUG("copy data from OpenCL device");
+    //LOG_DEBUG("copy data from OpenCL device");
 
     // get output back from device
     for(uint64_t i = 0; i < data.buffer.size(); i++)
