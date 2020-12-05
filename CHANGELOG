@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.1.0] - 2020-12-05
 
 - first version
 	- init device
@@ -10,3 +10,5 @@
 	- close device
 	- get work-item information from device
 	- get memory information from device
+        - first support for multiple gpus and kernels
+
