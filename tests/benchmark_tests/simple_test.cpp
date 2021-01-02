@@ -127,13 +127,16 @@ SimpleTest::simple_test()
     data.threadsPerWg.x = 256;
 
     // init empty buffer
-    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), false, true));
-    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), false, true));
-    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), true, true));
+    data.buffer.emplace("x",
+                        Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), false, true));
+    data.buffer.emplace("y",
+                        Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), false, true));
+    data.buffer.emplace("z",
+                        Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), true, true));
 
     // convert pointer
-    float* a = static_cast<float*>(data.buffer[0].data);
-    float* b = static_cast<float*>(data.buffer[1].data);
+    float* a = static_cast<float*>(data.buffer["x"].data);
+    float* b = static_cast<float*>(data.buffer["y"].data);
 
     // write intput dat into buffer
     for(uint32_t i = 0; i < testSize; i++)
@@ -149,9 +152,9 @@ SimpleTest::simple_test()
 
     m_initKernelTimeSlot.startTimer();
     assert(ocl->addKernel("add", kernelCode));
-    assert(ocl->bindKernelToBuffer("add", 0, data));
-    assert(ocl->bindKernelToBuffer("add", 1, data));
-    assert(ocl->bindKernelToBuffer("add", 2, data));
+    assert(ocl->bindKernelToBuffer("add", "x", data));
+    assert(ocl->bindKernelToBuffer("add", "y", data));
+    assert(ocl->bindKernelToBuffer("add", "z", data));
     m_initKernelTimeSlot.stopTimer();
 
     // run
@@ -172,7 +175,7 @@ SimpleTest::simple_test()
 
     // update data on device
     m_updateTimeSlot.startTimer();
-    assert(ocl->updateBufferOnDevice("add", 0));
+    assert(ocl->updateBufferOnDevice("add", "x"));
     m_updateTimeSlot.stopTimer();
 
     // clear device

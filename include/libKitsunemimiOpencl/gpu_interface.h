@@ -72,7 +72,18 @@ struct OpenClData
 {
     WorkerDim numberOfWg;
     WorkerDim threadsPerWg;
-    std::vector<WorkerBuffer> buffer;
+    std::map<std::string, WorkerBuffer> buffer;
+
+    bool containsBuffer(const std::string &name)
+    {
+        std::map<std::string, WorkerBuffer>::const_iterator it;
+        it = buffer.find(name);
+        if(it != buffer.end()) {
+            return true;
+        }
+
+        return false;
+    }
 };
 
 
@@ -88,7 +99,7 @@ public:
     bool addKernel(const std::string &kernelName,
                    const std::string &kernelCode);
     bool bindKernelToBuffer(const std::string &kernelName,
-                            const uint32_t bufferId,
+                            const std::string &bufferName,
                             OpenClData &data);
     bool setLocalMemory(const std::string &kernelName,
                         const uint32_t localMemorySize);
@@ -97,7 +108,7 @@ public:
 
     // runtime
     bool updateBufferOnDevice(const std::string &kernelName,
-                              const uint32_t bufferId,
+                              const std::string &bufferName,
                               uint64_t numberOfObjects = 0xFFFFFFFFFFFFFFFF,
                               const uint64_t offset = 0);
     bool run(const std::string &kernelName,
@@ -118,14 +129,32 @@ public:
     uint64_t getMaxWorkItemDimension();
 
 private:
+    struct BufferLink
+    {
+        WorkerBuffer* buffer = nullptr;
+        uint32_t bindedId = 0;
+        uint8_t padding[4];
+    };
+
     struct KernelDef
     {
         std::string id = "";
         std::string kernelCode = "";
         cl::Kernel kernel;
-        std::vector<WorkerBuffer*> bufferLinks;
+        std::map<std::string, BufferLink> bufferLinks;
         uint32_t localBufferSize = 0;
         uint32_t argumentCounter = 0;
+
+        bool containsBuffer(const std::string &name)
+        {
+            std::map<std::string, BufferLink>::const_iterator it;
+            it = bufferLinks.find(name);
+            if(it != bufferLinks.end()) {
+                return true;
+            }
+
+            return false;
+        }
     };
 
     cl::Device m_device;
