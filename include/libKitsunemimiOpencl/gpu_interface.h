@@ -80,11 +80,10 @@ public:
     const WorkerDim getMaxWorkItemSize();
     uint64_t getMaxWorkItemDimension();
 
-private:
     cl::Device m_device;
     cl::Context m_context;
     cl::CommandQueue m_queue;
-
+private:
     bool validateWorkerGroupSize(const GpuData &data);
     bool build(GpuData::KernelDef &def);
 };
