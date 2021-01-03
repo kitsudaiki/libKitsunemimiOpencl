@@ -129,31 +129,30 @@ Prepare buffer for data-transfers between the host and the device.
 
 ```cpp
 // create data-object
-Kitsunemimi::Opencl::OpenClData data;
+Kitsunemimi::Opencl::GpuData data;
 
 // init empty buffer
 // This prepare a buffer-object and allocate aligned memorey on the host.
 // These objects will be used to transfer data between the host and the device.
-data.buffer.emplace("buffer x",                                       // <-- self-defined id for the buffer
-                    Kitsunemimi::Opencl::WorkerBuffer(N,              // <-- number of elements
-                                                      sizeof(float),  // <-- size of one element
-                                                      false,          // <-- is output-buffer
-                                                      true));         // <-- set to true use a host-pointer
-                                                                      //     This makes copy to device faster,
-                                                                      //     but the kernel will be slower.
-                                                                      //     So keep the tradeoff in mind!
-data.buffer.emplace("buffer y",
-                    Kitsunemimi::Opencl::WorkerBuffer(N, 
-                                                      sizeof(float), 
-                                                      true,           // <-- second buffer in the example 
-                                                                      //     will be defined as output-buffer
-                                                      true));
+data.addBuffer("buffer x",     // <-- self-defined id for the buffer
+               N,              // <-- number of elements
+               sizeof(float),  // <-- size of one element
+               false,          // <-- is output-buffer
+               true);          // <-- set to true use a host-pointer
+                               //     This makes copy to device faster,
+                               //     but the kernel will be slower.
+                               //     So keep the tradeoff in mind!
+data.addBuffer("buffer y",
+               N, 
+               sizeof(float), 
+               true,           // <-- second buffer in the example 
+                               //     will be defined as output-buffer
+               true);
 // in the same style, there are multiple input- and output-buffer possible
 
 // for the example get here the first buffer and set all values of this buffer to 1.0
-float* a = static_cast<float*>(data.buffer["buffer x"].data);
-for(uint32_t i = 0; i < N; i++)
-{
+float* a = static_cast<float*>(data.getBufferData("buffer x"));
+for(uint32_t i = 0; i < N; i++) {
     a[i] = 1.0f;
 }
 ```
@@ -175,21 +174,21 @@ bool ret = false;
 ret = ocl->initCopyToDevice(data);
 
 // add kernel-code with name to device
-ret = ocl->addKernel("test_kernel", kernelCode)
+ret = ocl->addKernel(data, "test_kernel", kernelCode)
 // you can all multiple kernel to the device and its queue
 
 // bind buffer 0 and 1 to the kernel
-ret = ocl->bindKernelToBuffer("test_kernel", "buffer x", data);
-ret = ocl->bindKernelToBuffer("test_kernel", "buffer y", data);
+ret = ocl->bindKernelToBuffer(data, "test_kernel", "buffer x");
+ret = ocl->bindKernelToBuffer(data, "test_kernel", "buffer y");
 
 // run kernel-code this the data
-ret = ocl.run("test_kernel", data);
+ret = ocl->run(data, "test_kernel");
 
 // copy all as output-buffer defined buffer from device back to host
-ret = ocl.copyFromDevice(data);
+ret = ocl->copyFromDevice(data);
 
 // access the data in the output-buffer and process the result on the host
-float* outputValues = static_cast<float*>(data.buffer["buffer y"].data);
+float* outputValues = static_cast<float*>(data.getBufferData("buffer y"));
 ```
 
 Maybe you want to make more then one run. So you can update all buffer on the device, which are NOT defined as output-buffer.
@@ -198,41 +197,40 @@ Maybe you want to make more then one run. So you can update all buffer on the de
 bool ret = false;
 
 // for this example get the first buffer again and change this content
-float* a = static_cast<float*>(data.buffer["buffer x"].data);
-for(uint32_t i = 0; i < N; i++)
-{
+float* a = static_cast<float*>(data.getBufferData("buffer x"));
+for(uint32_t i = 0; i < N; i++) {
     a[i] = 2.0f;
 }
 
 // updata this on the host changed buffer also on the device with the following command
-ocl->updateBufferOnDevice("test_kernel", "buffer x");
+ocl->updateBufferOnDevice(data, "buffer x");
 
 // run the kernel again and copy the result back again.
-ret = ocl.run(data);
-ret = ocl.copyFromDevice(data);
+ret = ocl->run(data);
+ret = ocl->copyFromDevice(data);
 
-float* outputValues = static_cast<float*>(data.buffer["buffer y"].data);
+float* outputValues = static_cast<float*>(data.getBufferData("buffer y"));
 ```
 
 It is also possible to get some basic information from these opencl-wrapper-class. These getter are restricted for the available memory on the device and the maximum sizes of the worker-groups. 
 
 ```cpp
 // getter for memory
-uint64_t localSize = ocl.getLocalMemorySize();
-uint64_t globalSize = ocl.getGlobalMemorySize();
-uint64_t maxAlloc = ocl.getMaxMemAllocSize();
+uint64_t localSize = ocl->getLocalMemorySize();
+uint64_t globalSize = ocl->getGlobalMemorySize();
+uint64_t maxAlloc = ocl->getMaxMemAllocSize();
 
 // getter for work-groups sizes
-uint64_t maxWorkGroupSize = ocl.getMaxWorkGroupSize();
-uint64_t maxWorkItemDimension = ocl.getMaxWorkItemDimension();
-WorkerDim dim = ocl.getMaxWorkItemSize();
+uint64_t maxWorkGroupSize = ocl->getMaxWorkGroupSize();
+uint64_t maxWorkItemDimension = ocl->getMaxWorkItemDimension();
+WorkerDim dim = ocl->getMaxWorkItemSize();
 ```
 
 If you need other information, which are not covered by this few getter here, you can perform normal operations on the device-objects. For example like this:
 
 ```cpp
 cl_ulong size = 0;
-ocl.m_device.at(0).getInfo(CL_DEVICE_LOCAL_MEM_SIZE, &size);
+ocl->m_device.at(0).getInfo(CL_DEVICE_LOCAL_MEM_SIZE, &size);
 ```
 
 After all was done, then close the device.
@@ -241,7 +239,7 @@ After all was done, then close the device.
 // close the device and free all buffer. For this it requires the data-object
 // with the input- and output-data to free the buffer on the device and free the
 // allocated memory inside these data-objects
-ret = ocl.closeDevice(data);
+ret = ocl->closeDevice(data);
 
 // the destructor of the Opencl-class, where this ocl-object belongs to, also calls
 // this method, but without the data-object, so the destructor doesn't free the memory.
