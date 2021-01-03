@@ -172,7 +172,7 @@ SimpleTest::simple_test()
 
     // update data on device
     m_updateTimeSlot.startTimer();
-    assert(ocl->updateBufferOnDevice(data, "x"));
+    assert(ocl->updateBufferOnDevice(data, "add", "x"));
     m_updateTimeSlot.stopTimer();
 
     // clear device

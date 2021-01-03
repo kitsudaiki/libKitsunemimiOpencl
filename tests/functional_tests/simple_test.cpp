@@ -113,7 +113,7 @@ SimpleTest::simple_test()
     }
 
     // update data on device
-    TEST_EQUAL(ocl->updateBufferOnDevice(data, "x"), true);
+    TEST_EQUAL(ocl->updateBufferOnDevice(data, "add", "x"), true);
 
     // second run
     TEST_EQUAL(ocl->run(data, "add"), true);

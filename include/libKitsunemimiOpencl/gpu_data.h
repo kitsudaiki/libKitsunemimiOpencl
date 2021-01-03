@@ -58,7 +58,8 @@ public:
                    const uint64_t numberOfObjects,
                    const uint64_t objectSize,
                    const bool isOutput = false,
-                   const bool useHostPtr = false);
+                   const bool useHostPtr = false,
+                   void* data = nullptr);
     bool containsBuffer(const std::string &name);
     void* getBufferData(const std::string &name);
 
@@ -72,28 +73,8 @@ private:
         uint64_t numberOfObjects = 0;
         bool isOutput = false;
         bool useHostPtr = false;
+        bool allowBufferDeleteAfterClose = true;
         cl::Buffer clBuffer;
-
-        WorkerBuffer() {}
-
-        WorkerBuffer(const uint64_t numberOfObjects,
-                     const uint64_t objectSize,
-                     const bool isOutput = false,
-                     const bool useHostPtr = false)
-        {
-            this->numberOfBytes = numberOfObjects * objectSize;
-            this->data = Kitsunemimi::alignedMalloc(4096, numberOfBytes);
-            this->numberOfObjects = numberOfObjects;
-            this->isOutput = isOutput;
-            this->useHostPtr = useHostPtr;
-        }
-    };
-
-    struct BufferLink
-    {
-        WorkerBuffer* buffer = nullptr;
-        uint32_t bindedId = 0;
-        uint8_t padding[4];
     };
 
     struct KernelDef
@@ -101,7 +82,7 @@ private:
         std::string id = "";
         std::string kernelCode = "";
         cl::Kernel kernel;
-        std::map<std::string, BufferLink> bufferLinks;
+        std::map<std::string, uint32_t> arguments;
         uint32_t localBufferSize = 0;
         uint32_t argumentCounter = 0;
     };
@@ -113,6 +94,9 @@ private:
 
     bool containsKernel(const std::string &name);
     KernelDef* getKernel(const std::string &name);
+
+    uint32_t getArgPosition(KernelDef* kernelDef,
+                            const std::string &bufferName);
 };
 
 }

@@ -61,6 +61,7 @@ public:
 
     // runtime
     bool updateBufferOnDevice(GpuData &data,
+                              const std::string &kernelName,
                               const std::string &bufferName,
                               uint64_t numberOfObjects = 0xFFFFFFFFFFFFFFFF,
                               const uint64_t offset = 0);
