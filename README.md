@@ -203,7 +203,7 @@ for(uint32_t i = 0; i < N; i++) {
 }
 
 // updata this on the host changed buffer also on the device with the following command
-ocl->updateBufferOnDevice(data, "buffer x");
+ocl->updateBufferOnDevice(data, "test_kernel", "buffer x");
 
 // run the kernel again and copy the result back again.
 ret = ocl->run(data);

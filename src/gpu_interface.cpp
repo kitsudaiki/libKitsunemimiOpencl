@@ -263,7 +263,7 @@ GpuInterface::updateBufferOnDevice(GpuData &data,
                                    uint64_t numberOfObjects,
                                    const uint64_t offset)
 {
-    LOG_DEBUG("update buffer on OpenCL device");
+    // LOG_DEBUG("update buffer on OpenCL device");
 
     // check id
     if(data.containsBuffer(bufferName) == false)
