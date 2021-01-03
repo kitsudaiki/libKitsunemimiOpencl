@@ -73,6 +73,7 @@ private:
         uint64_t numberOfObjects = 0;
         bool isOutput = false;
         bool useHostPtr = false;
+        bool allowBufferDeleteAfterClose = true;
         cl::Buffer clBuffer;
     };
 

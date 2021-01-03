@@ -435,7 +435,9 @@ GpuInterface::closeDevice(GpuData &data)
         it != data.m_buffer.end();
         it++)
     {
-        if(it->second.data != nullptr) {
+        if(it->second.data != nullptr
+                && it->second.allowBufferDeleteAfterClose)
+        {
             Kitsunemimi::alignedFree(it->second.data, it->second.numberOfBytes);
         }
     }

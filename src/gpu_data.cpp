@@ -76,6 +76,7 @@ GpuData::addBuffer(const std::string &name,
     else
     {
         newBuffer.data = data;
+        newBuffer.allowBufferDeleteAfterClose = false;
     }
 
     m_buffer.insert(std::make_pair(name, newBuffer));
