@@ -58,7 +58,8 @@ public:
                    const uint64_t numberOfObjects,
                    const uint64_t objectSize,
                    const bool isOutput = false,
-                   const bool useHostPtr = false);
+                   const bool useHostPtr = false,
+                   void* data = nullptr);
     bool containsBuffer(const std::string &name);
     void* getBufferData(const std::string &name);
 
@@ -73,20 +74,6 @@ private:
         bool isOutput = false;
         bool useHostPtr = false;
         cl::Buffer clBuffer;
-
-        WorkerBuffer() {}
-
-        WorkerBuffer(const uint64_t numberOfObjects,
-                     const uint64_t objectSize,
-                     const bool isOutput = false,
-                     const bool useHostPtr = false)
-        {
-            this->numberOfBytes = numberOfObjects * objectSize;
-            this->data = Kitsunemimi::alignedMalloc(4096, numberOfBytes);
-            this->numberOfObjects = numberOfObjects;
-            this->isOutput = isOutput;
-            this->useHostPtr = useHostPtr;
-        }
     };
 
     struct BufferLink

@@ -39,6 +39,7 @@ GpuData::GpuData() {}
  * @param useHostPtr true to register buffer as host-buffer, which is not activly copied by the
  *                   host to the device but instead the device pulls the data from the buffer
  *                   if needed while running the kernel
+ * @param data predefined data-buffer, if new memory should be allocated
  *
  * @return false, if name already is registered, else true
  */
@@ -47,13 +48,36 @@ GpuData::addBuffer(const std::string &name,
                    const uint64_t numberOfObjects,
                    const uint64_t objectSize,
                    const bool isOutput,
-                   const bool useHostPtr)
+                   const bool useHostPtr,
+                   void* data)
 {
+    // precheck
     if(containsBuffer(name)) {
         return false;
     }
 
-    WorkerBuffer newBuffer(numberOfObjects, objectSize, isOutput, useHostPtr);
+    // prepare worker-buffer
+    WorkerBuffer newBuffer;
+    newBuffer.numberOfBytes = numberOfObjects * objectSize;
+    newBuffer.numberOfObjects = numberOfObjects;
+    newBuffer.isOutput = isOutput;
+    newBuffer.useHostPtr = useHostPtr;
+
+    // allocate or set memory
+    if(data == nullptr)
+    {
+        // fix size of the bytes to allocate, if necessary by round up to a multiple of 4096 bytes
+        if(newBuffer.numberOfBytes % 4096 != 0) {
+            newBuffer.numberOfBytes += 4096 - (newBuffer.numberOfBytes % 4096);
+        }
+
+        newBuffer.data = Kitsunemimi::alignedMalloc(4096, newBuffer.numberOfBytes);
+    }
+    else
+    {
+        newBuffer.data = data;
+    }
+
     m_buffer.insert(std::make_pair(name, newBuffer));
 
     return true;
