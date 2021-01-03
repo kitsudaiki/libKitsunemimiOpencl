@@ -46,30 +46,6 @@ struct WorkerDim
     uint64_t z = 1;
 };
 
-struct WorkerBuffer
-{
-    void* data = nullptr;
-    uint64_t numberOfBytes = 0;
-    uint64_t numberOfObjects = 0;
-    bool isOutput = false;
-    bool useHostPtr = false;
-    cl::Buffer clBuffer;
-
-    WorkerBuffer() {}
-
-    WorkerBuffer(const uint64_t numberOfObjects,
-                 const uint64_t objectSize,
-                 const bool isOutput = false,
-                 const bool useHostPtr = false)
-    {
-        this->numberOfBytes = numberOfObjects * objectSize;
-        this->data = Kitsunemimi::alignedMalloc(4096, numberOfBytes);
-        this->numberOfObjects = numberOfObjects;
-        this->isOutput = isOutput;
-        this->useHostPtr = useHostPtr;
-    }
-};
-
 class GpuData
 {
 public:
@@ -79,12 +55,39 @@ public:
     GpuData();
 
     bool addBuffer(const std::string &name,
-                   const WorkerBuffer &buffer);
+                   const uint64_t numberOfObjects,
+                   const uint64_t objectSize,
+                   const bool isOutput = false,
+                   const bool useHostPtr = false);
     bool containsBuffer(const std::string &name);
     void* getBufferData(const std::string &name);
 
 private:
     friend GpuInterface;
+
+    struct WorkerBuffer
+    {
+        void* data = nullptr;
+        uint64_t numberOfBytes = 0;
+        uint64_t numberOfObjects = 0;
+        bool isOutput = false;
+        bool useHostPtr = false;
+        cl::Buffer clBuffer;
+
+        WorkerBuffer() {}
+
+        WorkerBuffer(const uint64_t numberOfObjects,
+                     const uint64_t objectSize,
+                     const bool isOutput = false,
+                     const bool useHostPtr = false)
+        {
+            this->numberOfBytes = numberOfObjects * objectSize;
+            this->data = Kitsunemimi::alignedMalloc(4096, numberOfBytes);
+            this->numberOfObjects = numberOfObjects;
+            this->isOutput = isOutput;
+            this->useHostPtr = useHostPtr;
+        }
+    };
 
     struct BufferLink
     {

@@ -36,13 +36,18 @@ GpuData::GpuData() {}
  * @return
  */
 bool
-GpuData::addBuffer(const std::string &name, const WorkerBuffer &buffer)
+GpuData::addBuffer(const std::string &name,
+                   const uint64_t numberOfObjects,
+                   const uint64_t objectSize,
+                   const bool isOutput,
+                   const bool useHostPtr)
 {
     if(containsBuffer(name)) {
         return false;
     }
 
-    m_buffer.insert(std::make_pair(name, buffer));
+    WorkerBuffer newBuffer(numberOfObjects, objectSize, isOutput, useHostPtr);
+    m_buffer.insert(std::make_pair(name, newBuffer));
 
     return true;
 }
@@ -52,7 +57,7 @@ GpuData::addBuffer(const std::string &name, const WorkerBuffer &buffer)
  * @param name
  * @return
  */
-WorkerBuffer*
+GpuData::WorkerBuffer*
 GpuData::getBuffer(const std::string &name)
 {
     std::map<std::string, WorkerBuffer>::iterator it;

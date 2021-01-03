@@ -127,9 +127,9 @@ SimpleTest::simple_test()
     data.threadsPerWg.x = 256;
 
     // init empty buffer
-    data.addBuffer("x", Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), false, true));
-    data.addBuffer("y", Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), false, true));
-    data.addBuffer("z", Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), true, true));
+    data.addBuffer("x", testSize, sizeof(float), false, true);
+    data.addBuffer("y", testSize, sizeof(float), false, true);
+    data.addBuffer("z", testSize, sizeof(float), true, true);
 
     // convert pointer
     float* a = static_cast<float*>(data.getBufferData("x"));

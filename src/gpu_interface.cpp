@@ -65,21 +65,22 @@ GpuInterface::initCopyToDevice(GpuData &data)
     LOG_DEBUG("initial data transfer to OpenCL device");
 
     // send input to device
-    std::map<std::string, WorkerBuffer>::iterator it;
+    std::map<std::string, GpuData::WorkerBuffer>::iterator it;
     for(it = data.m_buffer.begin();
         it != data.m_buffer.end();
         it++)
     {
-        WorkerBuffer buffer = it->second;
+
+        GpuData::WorkerBuffer* buffer = &it->second;
 
         LOG_DEBUG("copy data to device: "
-                  + std::to_string(buffer.numberOfBytes)
+                  + std::to_string(buffer->numberOfBytes)
                   + " Bytes");
 
         // check buffer
-        if(buffer.numberOfBytes == 0
-                || buffer.numberOfObjects == 0
-                || buffer.data == nullptr)
+        if(buffer->numberOfBytes == 0
+                || buffer->numberOfObjects == 0
+                || buffer->data == nullptr)
         {
             LOG_ERROR("failed to copy data to device, because buffer with name '"
                       + it->first
@@ -89,10 +90,10 @@ GpuInterface::initCopyToDevice(GpuData &data)
 
         // create flag for memory handling
         cl_mem_flags flags = 0;
-        if(buffer.isOutput)
+        if(buffer->isOutput)
         {
             flags = CL_MEM_READ_WRITE;
-            if(buffer.useHostPtr) {
+            if(buffer->useHostPtr) {
                 flags = flags | CL_MEM_USE_HOST_PTR;
             } else {
                 flags = flags | CL_MEM_COPY_HOST_PTR;
@@ -100,7 +101,7 @@ GpuInterface::initCopyToDevice(GpuData &data)
         }
         else
         {
-            if(buffer.useHostPtr) {
+            if(buffer->useHostPtr) {
                 flags = CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR;
             } else {
                 flags = CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR;
@@ -110,8 +111,8 @@ GpuInterface::initCopyToDevice(GpuData &data)
         // send data or reference to device
         it->second.clBuffer = cl::Buffer(m_context,
                                          flags,
-                                         buffer.numberOfBytes,
-                                         buffer.data);
+                                         buffer->numberOfBytes,
+                                         buffer->data);
     }
 
     return true;
@@ -190,7 +191,7 @@ GpuInterface::bindKernelToBuffer(GpuData &data,
     }
 
     GpuData::KernelDef* def = data.getKernel(kernelName);
-    WorkerBuffer* buffer = &data.m_buffer[bufferName];
+    GpuData::WorkerBuffer* buffer = &data.m_buffer[bufferName];
 
     // register arguments in opencl
     const uint32_t argNumber = static_cast<uint32_t>(def->bufferLinks.size() * 2);
@@ -268,7 +269,7 @@ GpuInterface::updateBufferOnDevice(GpuData &data,
         return false;
     }
 
-    WorkerBuffer* buffer = data.getBuffer(bufferName);
+    GpuData::WorkerBuffer* buffer = data.getBuffer(bufferName);
     const uint64_t objectSize = buffer->numberOfBytes / buffer->numberOfObjects;
 
     // check if buffer is output-buffer
@@ -373,7 +374,7 @@ bool
 GpuInterface::copyFromDevice(GpuData &data)
 {
     // get output back from device
-    std::map<std::string, WorkerBuffer>::iterator it;
+    std::map<std::string, GpuData::WorkerBuffer>::iterator it;
     for(it = data.m_buffer.begin();
         it != data.m_buffer.end();
         it++)
@@ -426,7 +427,7 @@ GpuInterface::closeDevice(GpuData &data)
     }
 
     // free allocated memory on the host
-    std::map<std::string, WorkerBuffer>::iterator it;
+    std::map<std::string, GpuData::WorkerBuffer>::iterator it;
     for(it = data.m_buffer.begin();
         it != data.m_buffer.end();
         it++)
