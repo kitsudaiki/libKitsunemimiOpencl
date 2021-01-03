@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.0] - 2021-01-03
+
+### Changed
+- updated interface:
+   - to identify buffer by a name instead of index, to make identification easier, when in comes to multiple kernels with multiple buffers
+   - move objects into another class for cleaner code
+- some internal restructures
+
+
 ## [0.1.0] - 2020-12-05
 
 - first version
