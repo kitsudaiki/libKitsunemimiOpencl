@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        gpu_interface.h
  *
  * @author      Tobias Anker <tobias.anker@kitsunemimi.moe>
@@ -30,62 +30,13 @@
 
 #define __CL_ENABLE_EXCEPTIONS
 #include <CL/cl.hpp>
-#include <libKitsunemimiCommon/buffer/data_buffer.h>
+
+#include <libKitsunemimiOpencl/gpu_data.h>
 
 namespace Kitsunemimi
 {
 namespace Opencl
 {
-
-struct WorkerDim
-{
-    uint64_t x = 1;
-    uint64_t y = 1;
-    uint64_t z = 1;
-};
-
-struct WorkerBuffer
-{
-    void* data = nullptr;
-    uint64_t numberOfBytes = 0;
-    uint64_t numberOfObjects = 0;
-    bool isOutput = false;
-    bool useHostPtr = false;
-    cl::Buffer clBuffer;
-
-    WorkerBuffer() {}
-
-    WorkerBuffer(const uint64_t numberOfObjects,
-                 const uint64_t objectSize,
-                 const bool isOutput = false,
-                 const bool useHostPtr = false)
-    {
-        this->numberOfBytes = numberOfObjects * objectSize;
-        this->data = Kitsunemimi::alignedMalloc(4096, numberOfBytes);
-        this->numberOfObjects = numberOfObjects;
-        this->isOutput = isOutput;
-        this->useHostPtr = useHostPtr;
-    }
-};
-
-struct OpenClData
-{
-    WorkerDim numberOfWg;
-    WorkerDim threadsPerWg;
-    std::map<std::string, WorkerBuffer> buffer;
-
-    bool containsBuffer(const std::string &name)
-    {
-        std::map<std::string, WorkerBuffer>::const_iterator it;
-        it = buffer.find(name);
-        if(it != buffer.end()) {
-            return true;
-        }
-
-        return false;
-    }
-};
-
 
 class GpuInterface
 {
@@ -94,26 +45,27 @@ public:
     ~GpuInterface();
 
     // initializing
-    bool initCopyToDevice(OpenClData &data);
+    bool initCopyToDevice(GpuData &data);
 
-    bool addKernel(const std::string &kernelName,
+    bool addKernel(GpuData &data,
+                   const std::string &kernelName,
                    const std::string &kernelCode);
-    bool bindKernelToBuffer(const std::string &kernelName,
-                            const std::string &bufferName,
-                            OpenClData &data);
-    bool setLocalMemory(const std::string &kernelName,
+    bool bindKernelToBuffer(GpuData &data,
+                            const std::string &kernelName,
+                            const std::string &bufferName);
+    bool setLocalMemory(GpuData &data,
+                        const std::string &kernelName,
                         const uint32_t localMemorySize);
 
-    bool closeDevice(OpenClData &data);
+    bool closeDevice(GpuData &data);
 
     // runtime
-    bool updateBufferOnDevice(const std::string &kernelName,
+    bool updateBufferOnDevice(GpuData &data,
                               const std::string &bufferName,
                               uint64_t numberOfObjects = 0xFFFFFFFFFFFFFFFF,
                               const uint64_t offset = 0);
-    bool run(const std::string &kernelName,
-             OpenClData &data);
-    bool copyFromDevice(OpenClData &data);
+    bool run(GpuData &data, const std::string &kernelName);
+    bool copyFromDevice(GpuData &data);
 
     // common getter
     const std::string getDeviceName();
@@ -128,43 +80,12 @@ public:
     const WorkerDim getMaxWorkItemSize();
     uint64_t getMaxWorkItemDimension();
 
-private:
-    struct BufferLink
-    {
-        WorkerBuffer* buffer = nullptr;
-        uint32_t bindedId = 0;
-        uint8_t padding[4];
-    };
-
-    struct KernelDef
-    {
-        std::string id = "";
-        std::string kernelCode = "";
-        cl::Kernel kernel;
-        std::map<std::string, BufferLink> bufferLinks;
-        uint32_t localBufferSize = 0;
-        uint32_t argumentCounter = 0;
-
-        bool containsBuffer(const std::string &name)
-        {
-            std::map<std::string, BufferLink>::const_iterator it;
-            it = bufferLinks.find(name);
-            if(it != bufferLinks.end()) {
-                return true;
-            }
-
-            return false;
-        }
-    };
-
     cl::Device m_device;
-    std::map<std::string, KernelDef> m_kernel;
-
     cl::Context m_context;
     cl::CommandQueue m_queue;
-
-    bool validateWorkerGroupSize(const OpenClData &data);
-    bool build(KernelDef &def);
+private:
+    bool validateWorkerGroupSize(const GpuData &data);
+    bool build(GpuData::KernelDef &def);
 };
 
 }

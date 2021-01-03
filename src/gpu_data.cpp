@@ -1,0 +1,158 @@
+/**
+ * @file        gpu_data.cpp
+ *
+ * @author      Tobias Anker <tobias.anker@kitsunemimi.moe>
+ *
+ * @copyright   Apache License Version 2.0
+ *
+ *      Copyright 2020 Tobias Anker
+ *
+ *      Licensed under the Apache License, Version 2.0 (the "License");
+ *      you may not use this file except in compliance with the License.
+ *      You may obtain a copy of the License at
+ *
+ *          http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *      Unless required by applicable law or agreed to in writing, software
+ *      distributed under the License is distributed on an "AS IS" BASIS,
+ *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *      See the License for the specific language governing permissions and
+ *      limitations under the License.
+ */
+
+#include <libKitsunemimiOpencl/gpu_data.h>
+
+namespace Kitsunemimi
+{
+namespace Opencl
+{
+
+GpuData::GpuData() {}
+
+/**
+ * @brief register new buffer
+ *
+ * @param name name of the new buffer
+ * @param numberOfObjects number of objects, which have to be allocated
+ * @param objectSize number of bytes of a single object to allocate
+ * @param isOutput true to register this buffer as output-buffer
+ * @param useHostPtr true to register buffer as host-buffer, which is not activly copied by the
+ *                   host to the device but instead the device pulls the data from the buffer
+ *                   if needed while running the kernel
+ *
+ * @return false, if name already is registered, else true
+ */
+bool
+GpuData::addBuffer(const std::string &name,
+                   const uint64_t numberOfObjects,
+                   const uint64_t objectSize,
+                   const bool isOutput,
+                   const bool useHostPtr)
+{
+    if(containsBuffer(name)) {
+        return false;
+    }
+
+    WorkerBuffer newBuffer(numberOfObjects, objectSize, isOutput, useHostPtr);
+    m_buffer.insert(std::make_pair(name, newBuffer));
+
+    return true;
+}
+
+/**
+ * @brief get worker-buffer
+ *
+ * @param name name of the buffer
+ *
+ * @return pointer to worker-buffer, if name found, else nullptr
+ */
+GpuData::WorkerBuffer*
+GpuData::getBuffer(const std::string &name)
+{
+    std::map<std::string, WorkerBuffer>::iterator it;
+    it = m_buffer.find(name);
+    if(it != m_buffer.end()) {
+        return &it->second;
+    }
+
+    return nullptr;
+}
+
+/**
+ * @brief check if buffer-name exist
+ *
+ * @param name name of the buffer
+ *
+ * @return true, if exist, else false
+ */
+bool
+GpuData::containsBuffer(const std::string &name)
+{
+    std::map<std::string, WorkerBuffer>::const_iterator it;
+    it = m_buffer.find(name);
+    if(it != m_buffer.end()) {
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * @brief get buffer
+ *
+ * @param name name of the buffer
+ *
+ * @return pointer to data, if name found, else nullptr
+ */
+void*
+GpuData::getBufferData(const std::string &name)
+{
+    std::map<std::string, WorkerBuffer>::iterator it;
+    it = m_buffer.find(name);
+    if(it != m_buffer.end()) {
+        return it->second.data;
+    }
+
+    return nullptr;
+}
+
+/**
+ * @brief check if kernel-name exist
+ *
+ * @param name name of the kernel
+ *
+ * @return true, if exist, else false
+ */
+bool
+GpuData::containsKernel(const std::string &name)
+{
+    std::map<std::string, KernelDef>::const_iterator it;
+    it = m_kernel.find(name);
+    if(it != m_kernel.end()) {
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * @brief get kernel def object
+ *
+ * @param name name of the kernel
+ *
+ * @return nullptr if name not exist, else pointer to requested object
+ */
+GpuData::KernelDef*
+GpuData::getKernel(const std::string &name)
+{
+    std::map<std::string, KernelDef>::iterator it;
+    it = m_kernel.find(name);
+    if(it != m_kernel.end()) {
+        return &it->second;
+    }
+
+    return nullptr;
+}
+
+}
+}

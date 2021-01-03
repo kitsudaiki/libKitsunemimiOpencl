@@ -120,23 +120,20 @@ SimpleTest::simple_test()
     Kitsunemimi::Opencl::GpuInterface* ocl = oclHandler.m_interfaces.at(m_id);
 
     // create data-object
-    Kitsunemimi::Opencl::OpenClData data;
+    Kitsunemimi::Opencl::GpuData data;
 
     data.numberOfWg.x = testSize / 512;
     data.numberOfWg.y = 2;
     data.threadsPerWg.x = 256;
 
     // init empty buffer
-    data.buffer.emplace("x",
-                        Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), false, true));
-    data.buffer.emplace("y",
-                        Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), false, true));
-    data.buffer.emplace("z",
-                        Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), true, true));
+    data.addBuffer("x", testSize, sizeof(float), false, true);
+    data.addBuffer("y", testSize, sizeof(float), false, true);
+    data.addBuffer("z", testSize, sizeof(float), true, true);
 
     // convert pointer
-    float* a = static_cast<float*>(data.buffer["x"].data);
-    float* b = static_cast<float*>(data.buffer["y"].data);
+    float* a = static_cast<float*>(data.getBufferData("x"));
+    float* b = static_cast<float*>(data.getBufferData("y"));
 
     // write intput dat into buffer
     for(uint32_t i = 0; i < testSize; i++)
@@ -151,15 +148,15 @@ SimpleTest::simple_test()
     m_copyToDeviceTimeSlot.stopTimer();
 
     m_initKernelTimeSlot.startTimer();
-    assert(ocl->addKernel("add", kernelCode));
-    assert(ocl->bindKernelToBuffer("add", "x", data));
-    assert(ocl->bindKernelToBuffer("add", "y", data));
-    assert(ocl->bindKernelToBuffer("add", "z", data));
+    assert(ocl->addKernel(data, "add", kernelCode));
+    assert(ocl->bindKernelToBuffer(data, "add", "x"));
+    assert(ocl->bindKernelToBuffer(data, "add", "y"));
+    assert(ocl->bindKernelToBuffer(data, "add", "z"));
     m_initKernelTimeSlot.stopTimer();
 
     // run
     m_runTimeSlot.startTimer();
-    assert(ocl->run("add", data));
+    assert(ocl->run(data, "add"));
     m_runTimeSlot.stopTimer();
 
     // copy output back
@@ -175,7 +172,7 @@ SimpleTest::simple_test()
 
     // update data on device
     m_updateTimeSlot.startTimer();
-    assert(ocl->updateBufferOnDevice("add", "x"));
+    assert(ocl->updateBufferOnDevice(data, "x"));
     m_updateTimeSlot.stopTimer();
 
     // clear device
@@ -188,8 +185,7 @@ void
 SimpleTest::chooseDevice()
 {
     std::cout<<"found devices:"<<std::endl;
-    for(uint32_t i = 0; i < m_oclHandler->m_interfaces.size(); i++)
-    {
+    for(uint32_t i = 0; i < m_oclHandler->m_interfaces.size(); i++) {
         std::cout<<"    "<<i<<": "<<m_oclHandler->m_interfaces.at(i)->getDeviceName()<<std::endl;
     }
 
