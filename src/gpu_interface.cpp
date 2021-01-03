@@ -250,6 +250,7 @@ GpuInterface::setLocalMemory(GpuData &data,
  * @brief update data inside the buffer on the device
  *
  * @param data object with all data
+ * @param kernelName name of the kernel to identify arguement position
  * @param bufferName name of the buffer in the kernel
  * @param numberOfObjects number of objects to copy
  * @param offset offset in buffer on device
