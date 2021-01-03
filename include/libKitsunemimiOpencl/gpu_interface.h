@@ -82,7 +82,6 @@ public:
 
 private:
     cl::Device m_device;
-
     cl::Context m_context;
     cl::CommandQueue m_queue;
 

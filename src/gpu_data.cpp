@@ -1,3 +1,25 @@
+/**
+ * @file        gpu_data.cpp
+ *
+ * @author      Tobias Anker <tobias.anker@kitsunemimi.moe>
+ *
+ * @copyright   Apache License Version 2.0
+ *
+ *      Copyright 2020 Tobias Anker
+ *
+ *      Licensed under the Apache License, Version 2.0 (the "License");
+ *      you may not use this file except in compliance with the License.
+ *      You may obtain a copy of the License at
+ *
+ *          http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *      Unless required by applicable law or agreed to in writing, software
+ *      distributed under the License is distributed on an "AS IS" BASIS,
+ *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *      See the License for the specific language governing permissions and
+ *      limitations under the License.
+ */
+
 #include <libKitsunemimiOpencl/gpu_data.h>
 
 namespace Kitsunemimi
@@ -57,6 +79,23 @@ GpuData::containsBuffer(const std::string &name)
     }
 
     return false;
+}
+
+/**
+ * @brief GpuData::getData
+ * @param name
+ * @return
+ */
+void*
+GpuData::getBufferData(const std::string &name)
+{
+    std::map<std::string, WorkerBuffer>::iterator it;
+    it = m_buffer.find(name);
+    if(it != m_buffer.end()) {
+        return it->second.data;
+    }
+
+    return nullptr;
 }
 
 /**

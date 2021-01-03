@@ -1,3 +1,25 @@
+/**
+ * @file        gpu_data.h
+ *
+ * @author      Tobias Anker <tobias.anker@kitsunemimi.moe>
+ *
+ * @copyright   Apache License Version 2.0
+ *
+ *      Copyright 2020 Tobias Anker
+ *
+ *      Licensed under the Apache License, Version 2.0 (the "License");
+ *      you may not use this file except in compliance with the License.
+ *      You may obtain a copy of the License at
+ *
+ *          http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *      Unless required by applicable law or agreed to in writing, software
+ *      distributed under the License is distributed on an "AS IS" BASIS,
+ *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *      See the License for the specific language governing permissions and
+ *      limitations under the License.
+ */
+
 #ifndef GPU_DATA_H
 #define GPU_DATA_H
 
@@ -59,7 +81,7 @@ public:
     bool addBuffer(const std::string &name,
                    const WorkerBuffer &buffer);
     bool containsBuffer(const std::string &name);
-    WorkerBuffer* getBuffer(const std::string &name);
+    void* getBufferData(const std::string &name);
 
 private:
     friend GpuInterface;
@@ -83,6 +105,8 @@ private:
 
     std::map<std::string, WorkerBuffer> m_buffer;
     std::map<std::string, KernelDef> m_kernel;
+
+    WorkerBuffer* getBuffer(const std::string &name);
 
     bool containsKernel(const std::string &name);
     KernelDef* getKernel(const std::string &name);

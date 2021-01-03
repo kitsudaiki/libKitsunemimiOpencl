@@ -83,8 +83,8 @@ SimpleTest::simple_test()
     data.addBuffer("z", Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), true, true));
 
     // convert pointer
-    float* a = static_cast<float*>(data.getBuffer("x")->data);
-    float* b = static_cast<float*>(data.getBuffer("y")->data);
+    float* a = static_cast<float*>(data.getBufferData("x"));
+    float* b = static_cast<float*>(data.getBufferData("y"));
 
     // write intput dat into buffer
     for(uint32_t i = 0; i < testSize; i++)
@@ -104,7 +104,7 @@ SimpleTest::simple_test()
     TEST_EQUAL(ocl->copyFromDevice(data), true);
 
     // check result
-    float* outputValues = static_cast<float*>(data.getBuffer("z")->data);
+    float* outputValues = static_cast<float*>(data.getBufferData("z"));
     TEST_EQUAL(outputValues[42], 3.0f);;
 
     // update data on host
@@ -121,7 +121,7 @@ SimpleTest::simple_test()
     TEST_EQUAL(ocl->copyFromDevice(data), true);
 
     // check new result
-    outputValues = static_cast<float*>(data.getBuffer("z")->data);
+    outputValues = static_cast<float*>(data.getBufferData("z"));
     TEST_EQUAL(outputValues[42], 7.0f);
 
     // test memory getter
