@@ -48,7 +48,7 @@ GpuInterface::GpuInterface(const cl::Device &device)
  */
 GpuInterface::~GpuInterface()
 {
-    OpenClData emptyData;
+    GpuData emptyData;
     closeDevice(emptyData);
 }
 
@@ -60,14 +60,14 @@ GpuInterface::~GpuInterface()
  * @return true, if successful, else false
  */
 bool
-GpuInterface::initCopyToDevice(OpenClData &data)
+GpuInterface::initCopyToDevice(GpuData &data)
 {
     LOG_DEBUG("initial data transfer to OpenCL device");
 
     // send input to device
     std::map<std::string, WorkerBuffer>::iterator it;
-    for(it = data.buffer.begin();
-        it != data.buffer.end();
+    for(it = data.m_buffer.begin();
+        it != data.m_buffer.end();
         it++)
     {
         WorkerBuffer buffer = it->second;
@@ -170,7 +170,7 @@ GpuInterface::addKernel(const std::string &kernelName,
 bool
 GpuInterface::bindKernelToBuffer(const std::string &kernelName,
                                  const std::string &bufferName,
-                                 OpenClData &data)
+                                 GpuData &data)
 {
     LOG_DEBUG("bind buffer with name '" + bufferName + "' kernel with name: '" + kernelName + "'");
 
@@ -190,7 +190,7 @@ GpuInterface::bindKernelToBuffer(const std::string &kernelName,
         return false;
     }
 
-    WorkerBuffer* buffer = &data.buffer[bufferName];
+    WorkerBuffer* buffer = &data.m_buffer[bufferName];
 
     // register arguments in opencl
     const uint32_t argNumber = static_cast<uint32_t>(it->second.bufferLinks.size() * 2);
@@ -255,7 +255,8 @@ GpuInterface::setLocalMemory(const std::string &kernelName,
  * @return false, if copy failed of buffer is output-buffer, else true
  */
 bool
-GpuInterface::updateBufferOnDevice(const std::string &kernelName,
+GpuInterface::updateBufferOnDevice(GpuData &data,
+                                   const std::string &kernelName,
                                    const std::string &bufferName,
                                    uint64_t numberOfObjects,
                                    const uint64_t offset)
@@ -272,7 +273,7 @@ GpuInterface::updateBufferOnDevice(const std::string &kernelName,
     }
 
     // check id
-    if(it->second.containsBuffer(bufferName) == false)
+    if(data.containsBuffer(bufferName) == false)
     {
         LOG_ERROR("no buffer with name '" + bufferName + "' found");
         return false;
@@ -329,7 +330,7 @@ GpuInterface::updateBufferOnDevice(const std::string &kernelName,
  */
 bool
 GpuInterface::run(const std::string &kernelName,
-                  OpenClData &data)
+                  GpuData &data)
 {
     //LOG_DEBUG("run kernel on OpenCL device");
 
@@ -387,12 +388,12 @@ GpuInterface::run(const std::string &kernelName,
  * @return true, if successful, else false
  */
 bool
-GpuInterface::copyFromDevice(OpenClData &data)
+GpuInterface::copyFromDevice(GpuData &data)
 {
     // get output back from device
     std::map<std::string, WorkerBuffer>::iterator it;
-    for(it = data.buffer.begin();
-        it != data.buffer.end();
+    for(it = data.m_buffer.begin();
+        it != data.m_buffer.end();
         it++)
     {
         if(it->second.isOutput)
@@ -432,7 +433,7 @@ GpuInterface::getDeviceName()
  * @return true, if successful, else false
  */
 bool
-GpuInterface::closeDevice(OpenClData &data)
+GpuInterface::closeDevice(GpuData &data)
 {
     LOG_DEBUG("close OpenCL device");
 
@@ -444,8 +445,8 @@ GpuInterface::closeDevice(OpenClData &data)
 
     // free allocated memory on the host
     std::map<std::string, WorkerBuffer>::iterator it;
-    for(it = data.buffer.begin();
-        it != data.buffer.end();
+    for(it = data.m_buffer.begin();
+        it != data.m_buffer.end();
         it++)
     {
         if(it->second.data != nullptr) {
@@ -454,7 +455,7 @@ GpuInterface::closeDevice(OpenClData &data)
     }
 
     // clear data and free memory on the device
-    data.buffer.clear();
+    data.m_buffer.clear();
 
     return true;
 }
@@ -571,7 +572,7 @@ GpuInterface::getMaxWorkItemDimension()
  * @return true, if successful, else false
  */
 bool
-GpuInterface::validateWorkerGroupSize(const OpenClData &data)
+GpuInterface::validateWorkerGroupSize(const GpuData &data)
 {
     const uint64_t givenSize = data.threadsPerWg.x * data.threadsPerWg.y * data.threadsPerWg.z;
     const uint64_t maxSize = getMaxWorkGroupSize();
