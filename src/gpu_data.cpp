@@ -30,10 +30,17 @@ namespace Opencl
 GpuData::GpuData() {}
 
 /**
- * @brief GpuData::addBuffer
- * @param name
- * @param buffer
- * @return
+ * @brief register new buffer
+ *
+ * @param name name of the new buffer
+ * @param numberOfObjects number of objects, which have to be allocated
+ * @param objectSize number of bytes of a single object to allocate
+ * @param isOutput true to register this buffer as output-buffer
+ * @param useHostPtr true to register buffer as host-buffer, which is not activly copied by the
+ *                   host to the device but instead the device pulls the data from the buffer
+ *                   if needed while running the kernel
+ *
+ * @return false, if name already is registered, else true
  */
 bool
 GpuData::addBuffer(const std::string &name,
@@ -53,9 +60,11 @@ GpuData::addBuffer(const std::string &name,
 }
 
 /**
- * @brief GpuData::getBuffer
- * @param name
- * @return
+ * @brief get worker-buffer
+ *
+ * @param name name of the buffer
+ *
+ * @return pointer to worker-buffer, if name found, else nullptr
  */
 GpuData::WorkerBuffer*
 GpuData::getBuffer(const std::string &name)
@@ -70,9 +79,11 @@ GpuData::getBuffer(const std::string &name)
 }
 
 /**
- * @brief GpuData::containsBuffer
- * @param name
- * @return
+ * @brief check if buffer-name exist
+ *
+ * @param name name of the buffer
+ *
+ * @return true, if exist, else false
  */
 bool
 GpuData::containsBuffer(const std::string &name)
@@ -87,9 +98,11 @@ GpuData::containsBuffer(const std::string &name)
 }
 
 /**
- * @brief GpuData::getData
- * @param name
- * @return
+ * @brief get buffer
+ *
+ * @param name name of the buffer
+ *
+ * @return pointer to data, if name found, else nullptr
  */
 void*
 GpuData::getBufferData(const std::string &name)
@@ -104,9 +117,11 @@ GpuData::getBufferData(const std::string &name)
 }
 
 /**
- * @brief GpuData::containsKernel
- * @param name
- * @return
+ * @brief check if kernel-name exist
+ *
+ * @param name name of the kernel
+ *
+ * @return true, if exist, else false
  */
 bool
 GpuData::containsKernel(const std::string &name)
@@ -121,9 +136,11 @@ GpuData::containsKernel(const std::string &name)
 }
 
 /**
- * @brief GpuData::getKernel
- * @param name
- * @return
+ * @brief get kernel def object
+ *
+ * @param name name of the kernel
+ *
+ * @return nullptr if name not exist, else pointer to requested object
  */
 GpuData::KernelDef*
 GpuData::getKernel(const std::string &name)
