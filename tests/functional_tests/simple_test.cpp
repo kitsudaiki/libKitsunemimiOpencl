@@ -78,13 +78,16 @@ SimpleTest::simple_test()
     data.threadsPerWg.x = 128;
 
     // init empty buffer
-    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), false, true));
-    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), false, true));
-    data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), true, true));
+    data.buffer.emplace("x",
+                        Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), false, true));
+    data.buffer.emplace("y",
+                        Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), false, true));
+    data.buffer.emplace("z",
+                        Kitsunemimi::Opencl::WorkerBuffer(testSize, sizeof(float), true, true));
 
     // convert pointer
-    float* a = static_cast<float*>(data.buffer[0].data);
-    float* b = static_cast<float*>(data.buffer[1].data);
+    float* a = static_cast<float*>(data.buffer["x"].data);
+    float* b = static_cast<float*>(data.buffer["y"].data);
 
     // write intput dat into buffer
     for(uint32_t i = 0; i < testSize; i++)
@@ -96,15 +99,15 @@ SimpleTest::simple_test()
     // run
     TEST_EQUAL(ocl->initCopyToDevice(data), true);
     TEST_EQUAL(ocl->addKernel("add", kernelCode), true);
-    TEST_EQUAL(ocl->bindKernelToBuffer("add", 0, data), true);
-    TEST_EQUAL(ocl->bindKernelToBuffer("add", 1, data), true);
-    TEST_EQUAL(ocl->bindKernelToBuffer("add", 2, data), true);
+    TEST_EQUAL(ocl->bindKernelToBuffer("add", "x", data), true);
+    TEST_EQUAL(ocl->bindKernelToBuffer("add", "y", data), true);
+    TEST_EQUAL(ocl->bindKernelToBuffer("add", "z", data), true);
     //TEST_EQUAL(ocl->setLocalMemory("add", 256*256), true);
     TEST_EQUAL(ocl->run("add", data), true);
     TEST_EQUAL(ocl->copyFromDevice(data), true);
 
     // check result
-    float* outputValues = static_cast<float*>(data.buffer[2].data);
+    float* outputValues = static_cast<float*>(data.buffer["z"].data);
     TEST_EQUAL(outputValues[42], 3.0f);;
 
     // update data on host
@@ -114,7 +117,7 @@ SimpleTest::simple_test()
     }
 
     // update data on device
-    TEST_EQUAL(ocl->updateBufferOnDevice("add", 0), true);
+    TEST_EQUAL(ocl->updateBufferOnDevice("add", "x"), true);
 
     // second run
     TEST_EQUAL(ocl->run("add", data), true);
@@ -122,7 +125,7 @@ SimpleTest::simple_test()
     TEST_EQUAL(ocl->copyFromDevice(data), true);
 
     // check new result
-    outputValues = static_cast<float*>(data.buffer[2].data);
+    outputValues = static_cast<float*>(data.buffer["z"].data);
     TEST_EQUAL(outputValues[42], 7.0f);
 
     // test memory getter
