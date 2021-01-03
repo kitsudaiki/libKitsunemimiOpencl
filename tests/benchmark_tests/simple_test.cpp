@@ -148,15 +148,15 @@ SimpleTest::simple_test()
     m_copyToDeviceTimeSlot.stopTimer();
 
     m_initKernelTimeSlot.startTimer();
-    assert(ocl->addKernel("add", kernelCode));
-    assert(ocl->bindKernelToBuffer("add", "x", data));
-    assert(ocl->bindKernelToBuffer("add", "y", data));
-    assert(ocl->bindKernelToBuffer("add", "z", data));
+    assert(ocl->addKernel(data, "add", kernelCode));
+    assert(ocl->bindKernelToBuffer(data, "add", "x"));
+    assert(ocl->bindKernelToBuffer(data, "add", "y"));
+    assert(ocl->bindKernelToBuffer(data, "add", "z"));
     m_initKernelTimeSlot.stopTimer();
 
     // run
     m_runTimeSlot.startTimer();
-    assert(ocl->run("add", data));
+    assert(ocl->run(data, "add"));
     m_runTimeSlot.stopTimer();
 
     // copy output back
@@ -172,7 +172,7 @@ SimpleTest::simple_test()
 
     // update data on device
     m_updateTimeSlot.startTimer();
-    assert(ocl->updateBufferOnDevice(data, "add", "x"));
+    assert(ocl->updateBufferOnDevice(data, "x"));
     m_updateTimeSlot.stopTimer();
 
     // clear device

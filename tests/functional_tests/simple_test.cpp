@@ -95,12 +95,12 @@ SimpleTest::simple_test()
 
     // run
     TEST_EQUAL(ocl->initCopyToDevice(data), true);
-    TEST_EQUAL(ocl->addKernel("add", kernelCode), true);
-    TEST_EQUAL(ocl->bindKernelToBuffer("add", "x", data), true);
-    TEST_EQUAL(ocl->bindKernelToBuffer("add", "y", data), true);
-    TEST_EQUAL(ocl->bindKernelToBuffer("add", "z", data), true);
+    TEST_EQUAL(ocl->addKernel(data, "add", kernelCode), true);
+    TEST_EQUAL(ocl->bindKernelToBuffer(data, "add", "x"), true);
+    TEST_EQUAL(ocl->bindKernelToBuffer(data, "add", "y"), true);
+    TEST_EQUAL(ocl->bindKernelToBuffer(data, "add", "z"), true);
     //TEST_EQUAL(ocl->setLocalMemory("add", 256*256), true);
-    TEST_EQUAL(ocl->run("add", data), true);
+    TEST_EQUAL(ocl->run(data, "add"), true);
     TEST_EQUAL(ocl->copyFromDevice(data), true);
 
     // check result
@@ -113,10 +113,10 @@ SimpleTest::simple_test()
     }
 
     // update data on device
-    TEST_EQUAL(ocl->updateBufferOnDevice(data, "add", "x"), true);
+    TEST_EQUAL(ocl->updateBufferOnDevice(data, "x"), true);
 
     // second run
-    TEST_EQUAL(ocl->run("add", data), true);
+    TEST_EQUAL(ocl->run(data, "add"), true);
     // copy new output back
     TEST_EQUAL(ocl->copyFromDevice(data), true);
 

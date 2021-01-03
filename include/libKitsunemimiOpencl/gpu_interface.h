@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        gpu_interface.h
  *
  * @author      Tobias Anker <tobias.anker@kitsunemimi.moe>
@@ -47,24 +47,24 @@ public:
     // initializing
     bool initCopyToDevice(GpuData &data);
 
-    bool addKernel(const std::string &kernelName,
+    bool addKernel(GpuData &data,
+                   const std::string &kernelName,
                    const std::string &kernelCode);
-    bool bindKernelToBuffer(const std::string &kernelName,
-                            const std::string &bufferName,
-                            GpuData &data);
-    bool setLocalMemory(const std::string &kernelName,
+    bool bindKernelToBuffer(GpuData &data,
+                            const std::string &kernelName,
+                            const std::string &bufferName);
+    bool setLocalMemory(GpuData &data,
+                        const std::string &kernelName,
                         const uint32_t localMemorySize);
 
     bool closeDevice(GpuData &data);
 
     // runtime
     bool updateBufferOnDevice(GpuData &data,
-                              const std::string &kernelName,
                               const std::string &bufferName,
                               uint64_t numberOfObjects = 0xFFFFFFFFFFFFFFFF,
                               const uint64_t offset = 0);
-    bool run(const std::string &kernelName,
-             GpuData &data);
+    bool run(GpuData &data, const std::string &kernelName);
     bool copyFromDevice(GpuData &data);
 
     // common getter
@@ -81,31 +81,13 @@ public:
     uint64_t getMaxWorkItemDimension();
 
 private:
-    struct BufferLink
-    {
-        WorkerBuffer* buffer = nullptr;
-        uint32_t bindedId = 0;
-        uint8_t padding[4];
-    };
-
-    struct KernelDef
-    {
-        std::string id = "";
-        std::string kernelCode = "";
-        cl::Kernel kernel;
-        std::map<std::string, BufferLink> bufferLinks;
-        uint32_t localBufferSize = 0;
-        uint32_t argumentCounter = 0;
-    };
-
     cl::Device m_device;
-    std::map<std::string, KernelDef> m_kernel;
 
     cl::Context m_context;
     cl::CommandQueue m_queue;
 
     bool validateWorkerGroupSize(const GpuData &data);
-    bool build(KernelDef &def);
+    bool build(GpuData::KernelDef &def);
 };
 
 }

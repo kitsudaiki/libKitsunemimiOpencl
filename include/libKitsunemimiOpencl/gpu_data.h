@@ -64,7 +64,28 @@ public:
 private:
     friend GpuInterface;
 
+    struct BufferLink
+    {
+        WorkerBuffer* buffer = nullptr;
+        uint32_t bindedId = 0;
+        uint8_t padding[4];
+    };
+
+    struct KernelDef
+    {
+        std::string id = "";
+        std::string kernelCode = "";
+        cl::Kernel kernel;
+        std::map<std::string, BufferLink> bufferLinks;
+        uint32_t localBufferSize = 0;
+        uint32_t argumentCounter = 0;
+    };
+
     std::map<std::string, WorkerBuffer> m_buffer;
+    std::map<std::string, KernelDef> m_kernel;
+
+    bool containsKernel(const std::string &name);
+    KernelDef* getKernel(const std::string &name);
 };
 
 }
