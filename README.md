@@ -134,22 +134,24 @@ Kitsunemimi::Opencl::OpenClData data;
 // init empty buffer
 // This prepare a buffer-object and allocate aligned memorey on the host.
 // These objects will be used to transfer data between the host and the device.
-data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N,              // <-- number of elements
-                                                        sizeof(float),  // <-- size of one element
-                                                        false,          // <-- is output-buffer
-                                                        true));         // <-- set to true use a host-pointer
-                                                                        //     This makes copy to device faster,
-                                                                        //     but the kernel will be slower.
-                                                                        //     So keep the tradeoff in mind!
-data.buffer.push_back(Kitsunemimi::Opencl::WorkerBuffer(N, 
-                                                        sizeof(float), 
-                                                        true,           // <-- second buffer in the example 
-                                                                        //     will be defined as output-buffer
-                                                        true));
+data.buffer.emplace("buffer x",                                       // <-- self-defined id for the buffer
+                    Kitsunemimi::Opencl::WorkerBuffer(N,              // <-- number of elements
+                                                      sizeof(float),  // <-- size of one element
+                                                      false,          // <-- is output-buffer
+                                                      true));         // <-- set to true use a host-pointer
+                                                                      //     This makes copy to device faster,
+                                                                      //     but the kernel will be slower.
+                                                                      //     So keep the tradeoff in mind!
+data.buffer.emplace("buffer y",
+                    Kitsunemimi::Opencl::WorkerBuffer(N, 
+                                                      sizeof(float), 
+                                                      true,           // <-- second buffer in the example 
+                                                                      //     will be defined as output-buffer
+                                                      true));
 // in the same style, there are multiple input- and output-buffer possible
 
 // for the example get here the first buffer and set all values of this buffer to 1.0
-float* a = static_cast<float*>(data.buffer[0].data);
+float* a = static_cast<float*>(data.buffer["buffer x"].data);
 for(uint32_t i = 0; i < N; i++)
 {
     a[i] = 1.0f;
@@ -177,8 +179,8 @@ ret = ocl->addKernel("test_kernel", kernelCode)
 // you can all multiple kernel to the device and its queue
 
 // bind buffer 0 and 1 to the kernel
-ret = ocl->bindKernelToBuffer("test_kernel", 0, data);
-ret = ocl->bindKernelToBuffer("test_kernel", 1, data);
+ret = ocl->bindKernelToBuffer("test_kernel", "buffer x", data);
+ret = ocl->bindKernelToBuffer("test_kernel", "buffer y", data);
 
 // run kernel-code this the data
 ret = ocl.run("test_kernel", data);
@@ -187,7 +189,7 @@ ret = ocl.run("test_kernel", data);
 ret = ocl.copyFromDevice(data);
 
 // access the data in the output-buffer and process the result on the host
-float* outputValues = static_cast<float*>(data.buffer[1].data);
+float* outputValues = static_cast<float*>(data.buffer["buffer y"].data);
 ```
 
 Maybe you want to make more then one run. So you can update all buffer on the device, which are NOT defined as output-buffer.
@@ -196,20 +198,20 @@ Maybe you want to make more then one run. So you can update all buffer on the de
 bool ret = false;
 
 // for this example get the first buffer again and change this content
-float* a = static_cast<float*>(data.buffer[0].data);
+float* a = static_cast<float*>(data.buffer["buffer x"].data);
 for(uint32_t i = 0; i < N; i++)
 {
     a[i] = 2.0f;
 }
 
 // updata this on the host changed buffer also on the device with the following command
-ocl->updateBufferOnDevice("test_kernel", 0);
+ocl->updateBufferOnDevice("test_kernel", "buffer x");
 
 // run the kernel again and copy the result back again.
 ret = ocl.run(data);
 ret = ocl.copyFromDevice(data);
 
-float* outputValues = static_cast<float*>(data.buffer[1].data);
+float* outputValues = static_cast<float*>(data.buffer["buffer y"].data);
 ```
 
 It is also possible to get some basic information from these opencl-wrapper-class. These getter are restricted for the available memory on the device and the maximum sizes of the worker-groups. 
