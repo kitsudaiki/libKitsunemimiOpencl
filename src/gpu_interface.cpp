@@ -195,23 +195,22 @@ GpuInterface::bindKernelToBuffer(GpuData &data,
     GpuData::WorkerBuffer* buffer = &data.m_buffer[bufferName];
 
     // register arguments in opencl
-    const uint32_t argNumber = static_cast<uint32_t>(def->bufferLinks.size() * 2);
-    LOG_DEBUG("bind buffer with name "
+    const uint32_t argNumber = static_cast<uint32_t>(def->arguments.size() * 2);
+
+    LOG_DEBUG("bind buffer with name '"
               + bufferName
               + "' to argument number "
               + std::to_string(argNumber));
     def->kernel.setArg(argNumber, buffer->clBuffer);
+
     LOG_DEBUG("bind size value of buffer with name '"
               + bufferName
               + "' to argument number "
               + std::to_string(argNumber + 1));
     def->kernel.setArg(argNumber + 1, static_cast<cl_ulong>(buffer->numberOfObjects));
 
-    // create buffer-link for later access
-    GpuData::BufferLink link;
-    link.buffer = buffer;
-    link.bindedId = argNumber;
-    def->bufferLinks.insert(std::make_pair(bufferName, link));
+    // register on which argument-position the buffer was binded
+    def->arguments.insert(std::make_pair(bufferName, argNumber));
 
     return true;
 }
@@ -238,7 +237,7 @@ GpuInterface::setLocalMemory(GpuData &data,
     }
 
     GpuData::KernelDef* def = data.getKernel(kernelName);
-    const uint32_t argNumber = static_cast<uint32_t>(def->bufferLinks.size()) * 2;
+    const uint32_t argNumber = static_cast<uint32_t>(def->arguments.size()) * 2;
     // set arguments
     def->kernel.setArg(argNumber, localMemorySize, nullptr);
     def->kernel.setArg(argNumber + 1, static_cast<cl_ulong>(localMemorySize));
@@ -259,6 +258,7 @@ GpuInterface::setLocalMemory(GpuData &data,
  */
 bool
 GpuInterface::updateBufferOnDevice(GpuData &data,
+                                   const std::string &kernelName,
                                    const std::string &bufferName,
                                    uint64_t numberOfObjects,
                                    const uint64_t offset)
@@ -304,6 +304,11 @@ GpuInterface::updateBufferOnDevice(GpuData &data,
             return false;
         }
     }
+
+    // update size-value on device
+    GpuData::KernelDef* def = data.getKernel(kernelName);
+    const uint32_t argPos = data.getArgPosition(def, bufferName);
+    def->kernel.setArg(argPos + 1, static_cast<cl_ulong>(numberOfObjects));
 
     return true;
 }

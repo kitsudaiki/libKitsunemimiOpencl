@@ -179,5 +179,26 @@ GpuData::getKernel(const std::string &name)
     return nullptr;
 }
 
+/**
+ * @brief get argument position on which the argument was binded to the kernel
+ *
+ * @param kernelName name of the kernel
+ * @param bufferName name of the buffer
+ *
+ * @return position of the argument
+ */
+uint32_t
+GpuData::getArgPosition(KernelDef* kernelDef,
+                        const std::string &bufferName)
+{
+    std::map<std::string, uint32_t>::iterator it;
+    it = kernelDef->arguments.find(bufferName);
+    if(it != kernelDef->arguments.end()) {
+        return it->second;
+    }
+
+    return 0;
+}
+
 }
 }

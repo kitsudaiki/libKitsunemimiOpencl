@@ -77,19 +77,12 @@ private:
         cl::Buffer clBuffer;
     };
 
-    struct BufferLink
-    {
-        WorkerBuffer* buffer = nullptr;
-        uint32_t bindedId = 0;
-        uint8_t padding[4];
-    };
-
     struct KernelDef
     {
         std::string id = "";
         std::string kernelCode = "";
         cl::Kernel kernel;
-        std::map<std::string, BufferLink> bufferLinks;
+        std::map<std::string, uint32_t> arguments;
         uint32_t localBufferSize = 0;
         uint32_t argumentCounter = 0;
     };
@@ -101,6 +94,9 @@ private:
 
     bool containsKernel(const std::string &name);
     KernelDef* getKernel(const std::string &name);
+
+    uint32_t getArgPosition(KernelDef* kernelDef,
+                            const std::string &bufferName);
 };
 
 }
