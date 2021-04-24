@@ -30,3 +30,7 @@ SOURCES += \
     gpu_interface.cpp \
     gpu_handler.cpp \
     gpu_data.cpp
+
+unix {
+    INCLUDEPATH += /usr/lib/gcc/x86_64-linux-gnu/9/include
+}
