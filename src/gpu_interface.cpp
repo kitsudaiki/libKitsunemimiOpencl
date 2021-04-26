@@ -268,11 +268,6 @@ GpuInterface::updateBufferOnDevice(GpuData &data,
     GpuData::WorkerBuffer* buffer = data.getBuffer(bufferName);
     const uint64_t objectSize = buffer->numberOfBytes / buffer->numberOfObjects;
 
-    // check if buffer is output-buffer
-    if(buffer->isOutput) {
-        return false;
-    }
-
     // set size with value of the buffer, if size not explitely set
     if(numberOfObjects == 0xFFFFFFFFFFFFFFFF) {
         numberOfObjects = buffer->numberOfObjects;
