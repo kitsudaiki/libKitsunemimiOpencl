@@ -89,14 +89,12 @@ Here only an example kernel code to
 const std::string kernelCode =
     "__kernel void test_kernel(\n"
     "       __global const float* a,\n"  // <-- first input-buffer a
-    "       ulong n1,\n"                 // <-- number of elsements in buffer a
-    "       __global float* b,\n"        // <-- output-buffer
-    "       ulong out\n"                 // <-- number of elements of the output-buffer
+    "       __global float* b\n"        // <-- output-buffer
     "       )\n"
     "{\n"
     "    // do something with the data on device. This here is only a stupid useless example."
     "    size_t globalId = get_global_id(0) + get_global_size(0) * get_global_id(1);\n"
-    "    if (globalId < n1)\n"
+    "    if (globalId < N)\n"
     "    {\n"
     "       b[globalId] = a[globalId];"
     "    }\n"
@@ -137,7 +135,6 @@ Kitsunemimi::Opencl::GpuData data;
 data.addBuffer("buffer x",     // <-- self-defined id for the buffer
                N,              // <-- number of elements
                sizeof(float),  // <-- size of one element
-               false,          // <-- is output-buffer
                true);          // <-- set to true use a host-pointer
                                //     This makes copy to device faster,
                                //     but the kernel will be slower.
@@ -145,9 +142,7 @@ data.addBuffer("buffer x",     // <-- self-defined id for the buffer
 data.addBuffer("buffer y",
                N, 
                sizeof(float), 
-               true,           // <-- second buffer in the example 
-                               //     will be defined as output-buffer
-               true);
+               false);
 // in the same style, there are multiple input- and output-buffer possible
 
 // for the example get here the first buffer and set all values of this buffer to 1.0
@@ -181,11 +176,14 @@ ret = ocl->addKernel(data, "test_kernel", kernelCode)
 ret = ocl->bindKernelToBuffer(data, "test_kernel", "buffer x");
 ret = ocl->bindKernelToBuffer(data, "test_kernel", "buffer y");
 
+// updata this on the host changed buffer also on the device with the following command
+ocl->updateBufferOnDevice(data, "buffer x");
+
 // run kernel-code this the data
 ret = ocl->run(data, "test_kernel");
 
 // copy all as output-buffer defined buffer from device back to host
-ret = ocl->copyFromDevice(data);
+ret = ocl->copyFromDevice(data, "buffer y");
 
 // access the data in the output-buffer and process the result on the host
 float* outputValues = static_cast<float*>(data.getBufferData("buffer y"));
@@ -203,7 +201,7 @@ for(uint32_t i = 0; i < N; i++) {
 }
 
 // updata this on the host changed buffer also on the device with the following command
-ocl->updateBufferOnDevice(data, "test_kernel", "buffer x");
+ocl->updateBufferOnDevice(data, "buffer x");
 
 // run the kernel again and copy the result back again.
 ret = ocl->run(data);
