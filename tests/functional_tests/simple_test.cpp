@@ -75,9 +75,9 @@ SimpleTest::simple_test()
     data.threadsPerWg.x = 128;
 
     // init empty buffer
-    data.addBuffer("x", testSize, sizeof(float), false, true);
-    data.addBuffer("y", testSize, sizeof(float), false, true);
-    data.addBuffer("z", testSize, sizeof(float), true, true);
+    data.addBuffer("x", testSize, sizeof(float), false);
+    data.addBuffer("y", testSize, sizeof(float), false);
+    data.addBuffer("z", testSize, sizeof(float), false);
 
     // convert pointer
     float* a = static_cast<float*>(data.getBufferData("x"));
@@ -98,7 +98,7 @@ SimpleTest::simple_test()
     TEST_EQUAL(ocl->bindKernelToBuffer(data, "add", "z"), true)
     //TEST_EQUAL(ocl->setLocalMemory("add", 256*256), true);
     TEST_EQUAL(ocl->run(data, "add"), true)
-    TEST_EQUAL(ocl->copyFromDevice(data), true)
+    TEST_EQUAL(ocl->copyFromDevice(data, "z"), true)
 
     // check result
     float* outputValues = static_cast<float*>(data.getBufferData("z"));
@@ -110,12 +110,12 @@ SimpleTest::simple_test()
     }
 
     // update data on device
-    TEST_EQUAL(ocl->updateBufferOnDevice(data, "add", "x"), true)
+    TEST_EQUAL(ocl->updateBufferOnDevice(data, "x"), true)
 
     // second run
     TEST_EQUAL(ocl->run(data, "add"), true)
     // copy new output back
-    TEST_EQUAL(ocl->copyFromDevice(data), true)
+    TEST_EQUAL(ocl->copyFromDevice(data, "z"), true)
 
     // check new result
     outputValues = static_cast<float*>(data.getBufferData("z"));

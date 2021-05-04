@@ -90,22 +90,10 @@ GpuInterface::initCopyToDevice(GpuData &data)
 
         // create flag for memory handling
         cl_mem_flags flags = 0;
-        if(buffer->isOutput)
-        {
-            flags = CL_MEM_READ_WRITE;
-            if(buffer->useHostPtr) {
-                flags = flags | CL_MEM_USE_HOST_PTR;
-            } else {
-                flags = flags | CL_MEM_COPY_HOST_PTR;
-            }
-        }
-        else
-        {
-            if(buffer->useHostPtr) {
-                flags = CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR;
-            } else {
-                flags = CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR;
-            }
+        if(buffer->useHostPtr) {
+            flags = CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR;
+        } else {
+            flags = CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR;
         }
 
         // send data or reference to device
@@ -242,7 +230,6 @@ GpuInterface::setLocalMemory(GpuData &data,
  * @brief update data inside the buffer on the device
  *
  * @param data object with all data
- * @param kernelName name of the kernel to identify arguement position
  * @param bufferName name of the buffer in the kernel
  * @param numberOfObjects number of objects to copy
  * @param offset offset in buffer on device
@@ -251,7 +238,6 @@ GpuInterface::setLocalMemory(GpuData &data,
  */
 bool
 GpuInterface::updateBufferOnDevice(GpuData &data,
-                                   const std::string &kernelName,
                                    const std::string &bufferName,
                                    uint64_t numberOfObjects,
                                    const uint64_t offset)
@@ -292,9 +278,6 @@ GpuInterface::updateBufferOnDevice(GpuData &data,
             return false;
         }
     }
-
-    // update size-value on device
-    data.getArgPosition(data.getKernel(kernelName), bufferName);
 
     return true;
 }
@@ -365,27 +348,26 @@ GpuInterface::run(GpuData &data,
  * @return true, if successful, else false
  */
 bool
-GpuInterface::copyFromDevice(GpuData &data)
+GpuInterface::copyFromDevice(GpuData &data,
+                             const std::string &bufferName)
 {
-    // get output back from device
-    std::map<std::string, GpuData::WorkerBuffer>::iterator it;
-    for(it = data.m_buffer.begin();
-        it != data.m_buffer.end();
-        it++)
+    // check id
+    if(data.containsBuffer(bufferName) == false)
     {
-        if(it->second.isOutput)
-        {
-            // copy result back to host
-            const cl_int ret = m_queue.enqueueReadBuffer(it->second.clBuffer,
-                                                         CL_TRUE,
-                                                         0,
-                                                         it->second.numberOfBytes,
-                                                         it->second.data);
+        LOG_ERROR("no buffer with name '" + bufferName + "' found");
+        return false;
+    }
 
-            if(ret != CL_SUCCESS) {
-                return false;
-            }
-        }
+    GpuData::WorkerBuffer* buffer = data.getBuffer(bufferName);
+    // copy result back to host
+    const cl_int ret = m_queue.enqueueReadBuffer(buffer->clBuffer,
+                                                 CL_TRUE,
+                                                 0,
+                                                 buffer->numberOfBytes,
+                                                 buffer->data);
+
+    if(ret != CL_SUCCESS) {
+        return false;
     }
 
     return true;
