@@ -17,6 +17,7 @@ mkdir -p $RESULT_DIR
 function build_kitsune_lib_repo () {
     REPO_NAME=$1
     NUMBER_OF_THREADS=$2
+    ADDITIONAL_CONFIGS=$3
 
     # create build directory for repo and go into this directory
     REPO_DIR="$BUILD_DIR/$REPO_NAME"
@@ -24,36 +25,43 @@ function build_kitsune_lib_repo () {
     cd $REPO_DIR
 
     # build repo library with qmake
-    /usr/lib/x86_64-linux-gnu/qt5/bin/qmake "$PARENT_DIR/$REPO_NAME/$REPO_NAME.pro" -spec linux-g++ "CONFIG += optimize_full staticlib"
+    /usr/lib/x86_64-linux-gnu/qt5/bin/qmake "$PARENT_DIR/$REPO_NAME/$REPO_NAME.pro" -spec linux-g++ "CONFIG += optimize_full $ADDITIONAL_CONFIGS"
     /usr/bin/make -j$NUMBER_OF_THREADS
 
     # copy build-result and include-files into the result-directory
     cp $REPO_DIR/src/$REPO_NAME.a $RESULT_DIR/
     cp -r $PARENT_DIR/$REPO_NAME/include $RESULT_DIR/
+    ls -l $RESULT_DIR/include/
+    ls -l $RESULT_DIR
 }
 
 function get_required_kitsune_lib_repo () {
     REPO_NAME=$1
     TAG_OR_BRANCH=$2
     NUMBER_OF_THREADS=$3
+    ADDITIONAL_CONFIGS=$4
 
     # clone repo
     git clone  https://github.com/kitsudaiki/$REPO_NAME.git "$PARENT_DIR/$REPO_NAME"
     cd "$PARENT_DIR/$REPO_NAME"
     git checkout $TAG_OR_BRANCH
 
-    build_kitsune_lib_repo $REPO_NAME $NUMBER_OF_THREADS
+    build_kitsune_lib_repo $REPO_NAME $NUMBER_OF_THREADS $ADDITIONAL_CONFIGS
 }
 
 #-----------------------------------------------------------------------------------------------------------------
 
-get_required_kitsune_lib_repo "libKitsunemimiCommon" "v0.16.1" 4
+get_required_kitsune_lib_repo "libKitsunemimiCommon" "v0.18p.0" 4 "staticlib"
 
-get_required_kitsune_lib_repo "libKitsunemimiPersistence" "v0.10.1" 4
+get_required_kitsune_lib_repo "libKitsunemimiPersistence" "v0.10.1" 4 "staticlib"
 
 #-----------------------------------------------------------------------------------------------------------------
 
-build_kitsune_lib_repo "libKitsunemimiOpencl" 4
+if [ $1 = "test" ]; then
+    build_kitsune_lib_repo "libKitsunemimiOpencl" 4 "staticlib run_tests"
+else
+    build_kitsune_lib_repo "libKitsunemimiOpencl" 4 "staticlib"
+fi
 
 #-----------------------------------------------------------------------------------------------------------------
 

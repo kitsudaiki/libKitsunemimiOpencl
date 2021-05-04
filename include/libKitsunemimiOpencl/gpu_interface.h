@@ -61,12 +61,12 @@ public:
 
     // runtime
     bool updateBufferOnDevice(GpuData &data,
-                              const std::string &kernelName,
                               const std::string &bufferName,
                               uint64_t numberOfObjects = 0xFFFFFFFFFFFFFFFF,
                               const uint64_t offset = 0);
     bool run(GpuData &data, const std::string &kernelName);
-    bool copyFromDevice(GpuData &data);
+    bool copyFromDevice(GpuData &data,
+                        const std::string &bufferName);
 
     // common getter
     const std::string getDeviceName();

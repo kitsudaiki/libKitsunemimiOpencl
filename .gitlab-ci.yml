@@ -13,7 +13,7 @@ build:
     - apt-get install -y libboost-filesystem-dev
 
     - cd /builds/kitsudaiki/libKitsunemimiOpencl
-    - ./build.sh
+    - ./build.sh test
 
     - mkdir upload
 

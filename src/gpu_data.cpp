@@ -35,7 +35,6 @@ GpuData::GpuData() {}
  * @param name name of the new buffer
  * @param numberOfObjects number of objects, which have to be allocated
  * @param objectSize number of bytes of a single object to allocate
- * @param isOutput true to register this buffer as output-buffer
  * @param useHostPtr true to register buffer as host-buffer, which is not activly copied by the
  *                   host to the device but instead the device pulls the data from the buffer
  *                   if needed while running the kernel
@@ -47,7 +46,6 @@ bool
 GpuData::addBuffer(const std::string &name,
                    const uint64_t numberOfObjects,
                    const uint64_t objectSize,
-                   const bool isOutput,
                    const bool useHostPtr,
                    void* data)
 {
@@ -60,7 +58,6 @@ GpuData::addBuffer(const std::string &name,
     WorkerBuffer newBuffer;
     newBuffer.numberOfBytes = numberOfObjects * objectSize;
     newBuffer.numberOfObjects = numberOfObjects;
-    newBuffer.isOutput = isOutput;
     newBuffer.useHostPtr = useHostPtr;
 
     // allocate or set memory

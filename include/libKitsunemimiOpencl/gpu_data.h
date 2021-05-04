@@ -57,7 +57,6 @@ public:
     bool addBuffer(const std::string &name,
                    const uint64_t numberOfObjects,
                    const uint64_t objectSize,
-                   const bool isOutput = false,
                    const bool useHostPtr = false,
                    void* data = nullptr);
     bool containsBuffer(const std::string &name);
@@ -71,7 +70,6 @@ private:
         void* data = nullptr;
         uint64_t numberOfBytes = 0;
         uint64_t numberOfObjects = 0;
-        bool isOutput = false;
         bool useHostPtr = false;
         bool allowBufferDeleteAfterClose = true;
         cl::Buffer clBuffer;

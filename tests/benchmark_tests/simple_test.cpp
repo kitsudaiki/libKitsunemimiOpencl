@@ -127,9 +127,9 @@ SimpleTest::simple_test()
     data.threadsPerWg.x = 256;
 
     // init empty buffer
-    data.addBuffer("x", testSize, sizeof(float), false, true);
-    data.addBuffer("y", testSize, sizeof(float), false, true);
-    data.addBuffer("z", testSize, sizeof(float), true, true);
+    data.addBuffer("x", testSize, sizeof(float), false);
+    data.addBuffer("y", testSize, sizeof(float), false);
+    data.addBuffer("z", testSize, sizeof(float), false);
 
     // convert pointer
     float* a = static_cast<float*>(data.getBufferData("x"));
@@ -161,7 +161,7 @@ SimpleTest::simple_test()
 
     // copy output back
     m_copyToHostTimeSlot.startTimer();
-    assert(ocl->copyFromDevice(data));
+    assert(ocl->copyFromDevice(data, "z"));
     m_copyToHostTimeSlot.stopTimer();
 
     // update data on host
@@ -172,7 +172,7 @@ SimpleTest::simple_test()
 
     // update data on device
     m_updateTimeSlot.startTimer();
-    assert(ocl->updateBufferOnDevice(data, "add", "x"));
+    assert(ocl->updateBufferOnDevice(data, "x"));
     m_updateTimeSlot.stopTimer();
 
     // clear device
