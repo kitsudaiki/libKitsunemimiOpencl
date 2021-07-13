@@ -295,6 +295,9 @@ GpuInterface::run(GpuData &data,
                   const std::string &kernelName)
 {
     //LOG_DEBUG("run kernel on OpenCL device");
+    cl::Event event;
+    std::vector<cl::Event> events;
+    events.push_back(event);
 
     // precheck
     if(validateWorkerGroupSize(data) == false) {
@@ -322,10 +325,14 @@ GpuInterface::run(GpuData &data,
         const cl_int ret = m_queue.enqueueNDRangeKernel(data.getKernel(kernelName)->kernel,
                                                         cl::NullRange,
                                                         globalRange,
-                                                        localRange);
+                                                        localRange,
+                                                        NULL,
+                                                        &events[0]);
         if(ret != CL_SUCCESS) {
             return false;
         }
+
+        cl::WaitForEvents(events);
     }
     catch(const cl::Error &err)
     {
