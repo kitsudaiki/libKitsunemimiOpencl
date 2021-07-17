@@ -89,17 +89,14 @@ SimpleTest::SimpleTest()
 void
 SimpleTest::simple_test()
 {
-    const size_t testSize = 1 << 28;
+    const size_t testSize = 1 << 26;
 
     // example kernel for task: c = a + b.
     const std::string kernelCode =
         "__kernel void add(\n"
         "       __global const float* a,\n"
-        "       ulong n1,\n"
         "       __global const float* b,\n"
-        "       ulong n2,\n"
-        "       __global float* c,\n"
-        "       ulong out\n"
+        "       __global float* c\n"
         "       )\n"
         "{\n"
         "    __local float temp[512];\n"
@@ -109,10 +106,11 @@ SimpleTest::simple_test()
         "    size_t globalSize_y = get_global_size(1);\n"
         "    \n"
         "    size_t globalId = get_global_id(0) + get_global_size(0) * get_global_id(1);\n"
-        "    if (globalId < n1)\n"
+        "    size_t testSize = 1 << 26;\n"
+        "    if (globalId < testSize)\n"
         "    {\n"
         "       temp[localId_x] = b[globalId];\n"
-        "       c[globalId] = a[globalId] + temp[localId_x];"
+        "       c[globalId] = a[globalId] + b[globalId];"
         "    }\n"
         "}\n";
 
