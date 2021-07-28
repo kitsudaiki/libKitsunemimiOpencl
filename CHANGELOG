@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.0] - 2021-07-28
+
+### Removed
+- output-flag for buffer was removed to make it more flexible
+- size-parameter of each array is not send by separate argument anymore
+
+### Fixed
+- kernel now waits until finished
+
+
 ## [0.2.0] - 2021-01-03
 
 ### Changed

@@ -57,8 +57,8 @@ IMPORTANT: All my projects are only tested on Linux.
 
 Repository-Name | Version-Tag | Download-Path
 --- | --- | ---
-libKitsunemimiCommon | v0.16.1 |  https://github.com/kitsudaiki/libKitsunemimiCommon.git
-libKitsunemimiPersistence | v0.10.1 | https://github.com/kitsudaiki/libKitsunemimiPersistence.git
+libKitsunemimiCommon | v0.18.0 |  https://github.com/kitsudaiki/libKitsunemimiCommon.git
+libKitsunemimiPersistence | v0.10.2 | https://github.com/kitsudaiki/libKitsunemimiPersistence.git
 
 HINT: These Kitsunemimi-Libraries will be downloaded and build automatically with the build-script below.
 
