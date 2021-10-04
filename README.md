@@ -36,12 +36,11 @@ g++ | g++ | 6.x | Compiler for the C++ code.
 qmake | qt5-qmake | 5.x | This package provides the tool qmake, to build the project
 opencl-headers  | opencl-headers | 2.x | Header-files for opencl
 ocl-icd-opencl-dev | ocl-icd-opencl-dev | 2.x | libraries for opencl
-boost-filesystem library | libboost-filesystem-dev | 1.6x | interactions with files and directories on the system
 
 Installation on Ubuntu/Debian:
 
 ```bash
-sudo apt-get install g++ qt5-qmake opencl-headers ocl-icd-opencl-dev libboost-filesystem-dev
+sudo apt-get install g++ qt5-qmake opencl-headers ocl-icd-opencl-dev
 ```
 
 Based on the used gpu, there is an additional package necessary:
@@ -57,8 +56,7 @@ IMPORTANT: All my projects are only tested on Linux.
 
 Repository-Name | Version-Tag | Download-Path
 --- | --- | ---
-libKitsunemimiCommon | v0.18.0 |  https://github.com/kitsudaiki/libKitsunemimiCommon.git
-libKitsunemimiPersistence | v0.10.2 | https://github.com/kitsudaiki/libKitsunemimiPersistence.git
+libKitsunemimiCommon | v0.20.0 |  https://github.com/kitsudaiki/libKitsunemimiCommon.git
 
 HINT: These Kitsunemimi-Libraries will be downloaded and build automatically with the build-script below.
 
