@@ -23,7 +23,7 @@
 #include <libKitsunemimiOpencl/gpu_handler.h>
 
 #include <libKitsunemimiOpencl/gpu_interface.h>
-#include <libKitsunemimiPersistence/logger/logger.h>
+#include <libKitsunemimiCommon/logger.h>
 
 namespace Kitsunemimi
 {

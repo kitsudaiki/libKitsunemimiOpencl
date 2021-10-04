@@ -10,12 +10,7 @@ LIBS += -L../../../libKitsunemimiCommon/src/debug -lKitsunemimiCommon
 LIBS += -L../../../libKitsunemimiCommon/src/release -lKitsunemimiCommon
 INCLUDEPATH += ../../../libKitsunemimiCommon/include
 
-LIBS += -L../../../libKitsunemimiPersistence/src -lKitsunemimiPersistence
-LIBS += -L../../../libKitsunemimiPersistence/src/debug -lKitsunemimiPersistence
-LIBS += -L../../../libKitsunemimiPersistence/src/release -lKitsunemimiPersistence
-INCLUDEPATH += ../../../libKitsunemimiPersistence/include
-
-LIBS +=  -lOpenCL -lboost_filesystem -lboost_system
+LIBS +=  -lOpenCL
 
 INCLUDEPATH += $$PWD
 
@@ -28,6 +23,3 @@ SOURCES += \
 HEADERS += \
     simple_test.h
 
-unix {
-    INCLUDEPATH += /usr/lib/gcc/x86_64-linux-gnu/9/include
-}
