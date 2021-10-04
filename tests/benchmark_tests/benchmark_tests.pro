@@ -3,19 +3,15 @@ include(../../defaults.pri)
 QT -= qt core gui
 
 CONFIG   -= app_bundle
-CONFIG += c++14 console
+CONFIG += c++17 console
 
 LIBS += -L../../../libKitsunemimiCommon/src -lKitsunemimiCommon
 LIBS += -L../../../libKitsunemimiCommon/src/debug -lKitsunemimiCommon
 LIBS += -L../../../libKitsunemimiCommon/src/release -lKitsunemimiCommon
 INCLUDEPATH += ../../../libKitsunemimiCommon/include
 
-LIBS += -L../../../libKitsunemimiPersistence/src -lKitsunemimiPersistence
-LIBS += -L../../../libKitsunemimiPersistence/src/debug -lKitsunemimiPersistence
-LIBS += -L../../../libKitsunemimiPersistence/src/release -lKitsunemimiPersistence
-INCLUDEPATH += ../../../libKitsunemimiPersistence/include
 
-LIBS +=  -lOpenCL -lboost_filesystem -lboost_system
+LIBS +=  -lOpenCL
 
 INCLUDEPATH += $$PWD
 
@@ -28,6 +24,3 @@ SOURCES += \
 HEADERS += \
     simple_test.h
 
-unix {
-    INCLUDEPATH += /usr/lib/gcc/x86_64-linux-gnu/9/include
-}

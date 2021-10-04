@@ -9,8 +9,6 @@ build:
   script:
     - echo Working on branch $CI_COMMIT_REF_NAME
 
-    - apt-get update
-    - apt-get install -y libboost-filesystem-dev
 
     - cd /builds/kitsudaiki/libKitsunemimiOpencl
     - ./build.sh test
@@ -31,8 +29,6 @@ functional_test:
   stage: test
   script:
     - ls -l
-    - apt-get update
-    - apt-get install -y libboost-filesystem-dev
     - upload/functional_tests
   dependencies:
     - build
