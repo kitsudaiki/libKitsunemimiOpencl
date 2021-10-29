@@ -32,7 +32,7 @@ To avoid restrictions for special cases, all opencl-objects are public and so no
 
 name | repository | version | task
 --- | --- | --- | ---
-g++ | g++ | 6.x | Compiler for the C++ code.
+g++ | g++ | 8.x | Compiler for the C++ code.
 qmake | qt5-qmake | 5.x | This package provides the tool qmake, to build the project
 opencl-headers  | opencl-headers | 2.x | Header-files for opencl
 ocl-icd-opencl-dev | ocl-icd-opencl-dev | 2.x | libraries for opencl
@@ -56,7 +56,7 @@ IMPORTANT: All my projects are only tested on Linux.
 
 Repository-Name | Version-Tag | Download-Path
 --- | --- | ---
-libKitsunemimiCommon | v0.20.0 |  https://github.com/kitsudaiki/libKitsunemimiCommon.git
+libKitsunemimiCommon | v0.22.0 |  https://github.com/kitsudaiki/libKitsunemimiCommon.git
 
 HINT: These Kitsunemimi-Libraries will be downloaded and build automatically with the build-script below.
 
