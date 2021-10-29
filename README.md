@@ -3,7 +3,7 @@
 ![Gitlab pipeline status](https://img.shields.io/gitlab/pipeline/kitsudaiki/libKitsunemimiOpencl?label=build&style=flat-square)
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/kitsudaiki/libKitsunemimiOpencl?label=version&style=flat-square)
 ![GitHub](https://img.shields.io/github/license/kitsudaiki/libKitsunemimiOpencl?style=flat-square)
-![C++Version](https://img.shields.io/badge/c%2B%2B-14-blue?style=flat-square)
+![C++Version](https://img.shields.io/badge/c%2B%2B-17-blue?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-Linux--x64-lightgrey?style=flat-square)
 
 ## Description

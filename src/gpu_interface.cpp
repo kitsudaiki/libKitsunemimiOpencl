@@ -82,9 +82,11 @@ GpuInterface::initCopyToDevice(GpuData &data)
                 || buffer->numberOfObjects == 0
                 || buffer->data == nullptr)
         {
-            LOG_ERROR("failed to copy data to device, because buffer with name '"
-                      + it->first
-                      + "' has size 0 or is not initialized.");
+            ErrorContainer error;
+            error.possibleSolution = "failed to copy data to device, because buffer with name '"
+                                     + it->first
+                                     + "' has size 0 or is not initialized.";
+            LOG_ERROR(error);
             return false;
         }
 
@@ -138,11 +140,13 @@ GpuInterface::addKernel(GpuData &data,
     }
     catch(const cl::Error &err)
     {
-        LOG_ERROR("OpenCL error: "
-                  + std::string(err.what())
-                  + "("
-                  + std::to_string(err.err())
-                  + ")");
+        ErrorContainer error;
+        error.possibleSolution = "OpenCL error: "
+                                 + std::string(err.what())
+                                 + "("
+                                 + std::to_string(err.err())
+                                 + ")";
+        LOG_ERROR(error);
         return false;
     }
 
@@ -168,14 +172,18 @@ GpuInterface::bindKernelToBuffer(GpuData &data,
     // get kernel-data
     if(data.containsKernel(kernelName) == false)
     {
-        LOG_ERROR("no kernel with name '" + kernelName + "' found");
+        ErrorContainer error;
+        error.possibleSolution = "no kernel with name '" + kernelName + "' found";
+        LOG_ERROR(error);
         return false;
     }
 
     // check if buffer-name exist
     if(data.containsBuffer(bufferName) == false)
     {
-        LOG_ERROR("no buffer with name '" + bufferName + "' found");
+        ErrorContainer error;
+        error.possibleSolution = "no buffer with name '" + bufferName + "' found";
+        LOG_ERROR(error);
         return false;
     }
 
@@ -214,7 +222,9 @@ GpuInterface::setLocalMemory(GpuData &data,
     // get kernel-data
     if(data.containsKernel(kernelName) == false)
     {
-        LOG_ERROR("no kernel with name '" + kernelName + "' found");
+        ErrorContainer error;
+        error.possibleSolution = "no kernel with name '" + kernelName + "' found";
+        LOG_ERROR(error);
         return false;
     }
 
@@ -247,7 +257,9 @@ GpuInterface::updateBufferOnDevice(GpuData &data,
     // check id
     if(data.containsBuffer(bufferName) == false)
     {
-        LOG_ERROR("no buffer with name '" + bufferName + "' found");
+        ErrorContainer error;
+        error.possibleSolution = "no buffer with name '" + bufferName + "' found";
+        LOG_ERROR(error);
         return false;
     }
 
@@ -315,7 +327,9 @@ GpuInterface::run(GpuData &data,
     // get kernel-data
     if(data.containsKernel(kernelName) == false)
     {
-        LOG_ERROR("no kernel with name '" + kernelName + "' found");
+        ErrorContainer error;
+        error.possibleSolution = "no kernel with name '" + kernelName + "' found";
+        LOG_ERROR(error);
         return false;
     }
 
@@ -336,11 +350,13 @@ GpuInterface::run(GpuData &data,
     }
     catch(const cl::Error &err)
     {
-        LOG_ERROR("OpenCL error: "
-                  + std::string(err.what())
-                  + "("
-                  + std::to_string(err.err())
-                  + ")");
+        ErrorContainer error;
+        error.possibleSolution = "OpenCL error: "
+                                 + std::string(err.what())
+                                 + "("
+                                 + std::to_string(err.err())
+                                 + ")";
+        LOG_ERROR(error);
         return false;
     }
 
@@ -361,7 +377,9 @@ GpuInterface::copyFromDevice(GpuData &data,
     // check id
     if(data.containsBuffer(bufferName) == false)
     {
-        LOG_ERROR("no buffer with name '" + bufferName + "' found");
+        ErrorContainer error;
+        error.possibleSolution = "no buffer with name '" + bufferName + "' found";
+        LOG_ERROR(error);
         return false;
     }
 
@@ -548,10 +566,12 @@ GpuInterface::validateWorkerGroupSize(const GpuData &data)
     // checko maximum size
     if(givenSize > maxSize)
     {
-        LOG_ERROR("Size of the work-group is too big. The maximum allowed is "
-                  + std::to_string(maxSize)
-                  + ", but set was a total size of "
-                  + std::to_string(givenSize));
+        ErrorContainer error;
+        error.possibleSolution = "Size of the work-group is too big. The maximum allowed is "
+                                 + std::to_string(maxSize)
+                                 + ", but set was a total size of "
+                                 + std::to_string(givenSize);
+        LOG_ERROR(error);
         return false;
     }
 
@@ -560,20 +580,29 @@ GpuInterface::validateWorkerGroupSize(const GpuData &data)
     // check single dimensions
     if(data.threadsPerWg.x > maxDim.x)
     {
-        LOG_ERROR("The x-dimension of the work-item size is only allowed to have a maximum of"
-                  + std::to_string(maxDim.x));
+        ErrorContainer error;
+        error.possibleSolution = "The x-dimension of the work-item size is only "
+                                 "allowed to have a maximum of "
+                                 + std::to_string(maxDim.x);
+        LOG_ERROR(error);
         return false;
     }
     if(data.threadsPerWg.y > maxDim.y)
     {
-        LOG_ERROR("The y-dimension of the work-item size is only allowed to have a maximum of"
-                  + std::to_string(maxDim.y));
+        ErrorContainer error;
+        error.possibleSolution = "The y-dimension of the work-item size is only "
+                                 "allowed to have a maximum of "
+                                 + std::to_string(maxDim.y);
+        LOG_ERROR(error);
         return false;
     }
     if(data.threadsPerWg.z > maxDim.z)
     {
-        LOG_ERROR("The z-dimension of the work-item size is only allowed to have a maximum of"
-                  + std::to_string(maxDim.z));
+        ErrorContainer error;
+        error.possibleSolution = "The z-dimension of the work-item size is only "
+                                 "allowed to have a maximum of "
+                                 + std::to_string(maxDim.z);
+        LOG_ERROR(error);
         return false;
     }
 
@@ -603,8 +632,10 @@ GpuInterface::build(GpuData::KernelDef &data)
     }
     catch(const cl::Error&)
     {
-        LOG_ERROR("OpenCL compilation error\n    "
-                  + program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_device));
+        ErrorContainer error;
+        error.possibleSolution = "OpenCL compilation error\n    "
+                                 + program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_device);
+        LOG_ERROR(error);
         return false;
     }
 

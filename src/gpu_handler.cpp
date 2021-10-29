@@ -53,7 +53,10 @@ GpuHandler::initDevice()
         cl::Platform::get(&m_platform);
         if(m_platform.empty())
         {
-            LOG_ERROR("No OpenCL platforms found.");
+            ErrorContainer error;
+            error.errorMessage = "No OpenCL platforms found.";
+            error.possibleSolution = "install a graphics card.";
+            LOG_ERROR(error);
             return false;
         }
 
@@ -65,11 +68,13 @@ GpuHandler::initDevice()
     }
     catch(const cl::Error &err)
     {
-        LOG_ERROR("OpenCL error: "
-                  + std::string(err.what())
-                  + "("
-                  + std::to_string(err.err())
-                  + ")");
+        ErrorContainer error;
+        error.errorMessage = "OpenCL error: "
+                             + std::string(err.what())
+                             + "("
+                             + std::to_string(err.err())
+                             + ")";
+        LOG_ERROR(error);
         return false;
     }
 }
