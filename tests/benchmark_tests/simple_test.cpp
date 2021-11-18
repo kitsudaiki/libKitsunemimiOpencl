@@ -90,6 +90,7 @@ void
 SimpleTest::simple_test()
 {
     const size_t testSize = 1 << 26;
+    ErrorContainer error;
 
     // example kernel for task: c = a + b.
     const std::string kernelCode =
@@ -115,6 +116,7 @@ SimpleTest::simple_test()
         "}\n";
 
     Kitsunemimi::Opencl::GpuHandler oclHandler;
+    assert(oclHandler.initDevice(error));
     Kitsunemimi::Opencl::GpuInterface* ocl = oclHandler.m_interfaces.at(m_id);
 
     // create data-object
@@ -142,24 +144,24 @@ SimpleTest::simple_test()
 
     // copy to device
     m_copyToDeviceTimeSlot.startTimer();
-    assert(ocl->initCopyToDevice(data));
+    assert(ocl->initCopyToDevice(data, error));
     m_copyToDeviceTimeSlot.stopTimer();
 
     m_initKernelTimeSlot.startTimer();
-    assert(ocl->addKernel(data, "add", kernelCode));
-    assert(ocl->bindKernelToBuffer(data, "add", "x"));
-    assert(ocl->bindKernelToBuffer(data, "add", "y"));
-    assert(ocl->bindKernelToBuffer(data, "add", "z"));
+    assert(ocl->addKernel(data, "add", kernelCode, error));
+    assert(ocl->bindKernelToBuffer(data, "add", "x", error));
+    assert(ocl->bindKernelToBuffer(data, "add", "y", error));
+    assert(ocl->bindKernelToBuffer(data, "add", "z", error));
     m_initKernelTimeSlot.stopTimer();
 
     // run
     m_runTimeSlot.startTimer();
-    assert(ocl->run(data, "add"));
+    assert(ocl->run(data, "add", error));
     m_runTimeSlot.stopTimer();
 
     // copy output back
     m_copyToHostTimeSlot.startTimer();
-    assert(ocl->copyFromDevice(data, "z"));
+    assert(ocl->copyFromDevice(data, "z", error));
     m_copyToHostTimeSlot.stopTimer();
 
     // update data on host
@@ -170,7 +172,7 @@ SimpleTest::simple_test()
 
     // update data on device
     m_updateTimeSlot.startTimer();
-    assert(ocl->updateBufferOnDevice(data, "x"));
+    assert(ocl->updateBufferOnDevice(data, "x", error));
     m_updateTimeSlot.stopTimer();
 
     // clear device

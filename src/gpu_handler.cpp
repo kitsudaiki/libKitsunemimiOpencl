@@ -30,21 +30,23 @@ namespace Kitsunemimi
 namespace Opencl
 {
 
-GpuHandler::GpuHandler()
-{
-    initDevice();
-}
+GpuHandler::GpuHandler() {}
 
 /**
  * @brief initialize opencl
  *
  * @param config object with config-parameter
+ * @param error reference for error-output
  *
  * @return true, if creation was successful, else false
  */
 bool
-GpuHandler::initDevice()
+GpuHandler::initDevice(ErrorContainer &error)
 {
+    if(m_isInit) {
+        return true;
+    }
+
     LOG_DEBUG("initialize OpenCL device");
 
     try
@@ -53,9 +55,7 @@ GpuHandler::initDevice()
         cl::Platform::get(&m_platform);
         if(m_platform.empty())
         {
-            ErrorContainer error;
-            error.errorMessage = "No OpenCL platforms found.";
-            error.possibleSolution = "install a graphics card.";
+            error.addSolution("No OpenCL platforms found.");
             LOG_ERROR(error);
             return false;
         }
@@ -64,16 +64,17 @@ GpuHandler::initDevice()
 
         collectDevices();
 
+        m_isInit = true;
+
         return true;
     }
     catch(const cl::Error &err)
     {
-        ErrorContainer error;
-        error.errorMessage = "OpenCL error: "
-                             + std::string(err.what())
-                             + "("
-                             + std::to_string(err.err())
-                             + ")";
+        error.addMeesage("OpenCL error: "
+                         + std::string(err.what())
+                         + "("
+                         + std::to_string(err.err())
+                         + ")");
         LOG_ERROR(error);
         return false;
     }

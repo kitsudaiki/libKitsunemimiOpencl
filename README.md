@@ -56,7 +56,7 @@ IMPORTANT: All my projects are only tested on Linux.
 
 Repository-Name | Version-Tag | Download-Path
 --- | --- | ---
-libKitsunemimiCommon | v0.22.0 |  https://github.com/kitsudaiki/libKitsunemimiCommon.git
+libKitsunemimiCommon | v0.23.0 |  https://github.com/kitsudaiki/libKitsunemimiCommon.git
 
 HINT: These Kitsunemimi-Libraries will be downloaded and build automatically with the build-script below.
 
@@ -105,14 +105,17 @@ The copy process for the library from host to device copies always at first the 
 ```cpp
 #include <libKitsunemimiOpencl/gpu_handler.h>
 #include <libKitsunemimiOpencl/gpu_interface.h>
+#include <libKitsunemimiCommon/logger.h>
 
 // Optional  initialize the logger. This here initalize a console logger, 
 // which prints all error- and info-messages on the consol
-#include <libKitsunemimiPersistence/logger/logger.h>
-Kitsunemimi::Persistence::initConsoleLogger();
+Kitsunemimi::initConsoleLogger(true);
+Kitsunemimi::ErrorContainer error;
+// in case of an error the message con be printed with LOG_ERROR(error)
 
 // init opencl-class of this library
 Kitsunemimi::Opencl::GpuHandler oclHandler;
+oclHandler.initDevice(error)
 // the GpuHandler collect all devices of the host and stores them 
 // into oclHandler.m_interfaces
 
@@ -164,24 +167,24 @@ In the main-part copy the data to the device and process them on the device.
 bool ret = false;
 
 // copy the data of OpenClData-object, which was initialized in the snipped before 
-ret = ocl->initCopyToDevice(data);
+ret = ocl->initCopyToDevice(data, error);
 
 // add kernel-code with name to device
-ret = ocl->addKernel(data, "test_kernel", kernelCode)
+ret = ocl->addKernel(data, "test_kernel", kernelCode, error)
 // you can all multiple kernel to the device and its queue
 
 // bind buffer 0 and 1 to the kernel
-ret = ocl->bindKernelToBuffer(data, "test_kernel", "buffer x");
-ret = ocl->bindKernelToBuffer(data, "test_kernel", "buffer y");
+ret = ocl->bindKernelToBuffer(data, "test_kernel", "buffer x", error);
+ret = ocl->bindKernelToBuffer(data, "test_kernel", "buffer y", error);
 
 // updata this on the host changed buffer also on the device with the following command
-ocl->updateBufferOnDevice(data, "buffer x");
+ocl->updateBufferOnDevice(data, "buffer x", error);
 
 // run kernel-code this the data
-ret = ocl->run(data, "test_kernel");
+ret = ocl->run(data, "test_kernel", error);
 
 // copy all as output-buffer defined buffer from device back to host
-ret = ocl->copyFromDevice(data, "buffer y");
+ret = ocl->copyFromDevice(data, "buffer y", error);
 
 // access the data in the output-buffer and process the result on the host
 float* outputValues = static_cast<float*>(data.getBufferData("buffer y"));
@@ -199,7 +202,7 @@ for(uint32_t i = 0; i < N; i++) {
 }
 
 // updata this on the host changed buffer also on the device with the following command
-ocl->updateBufferOnDevice(data, "buffer x");
+ocl->updateBufferOnDevice(data, "buffer x", error);
 
 // run the kernel again and copy the result back again.
 ret = ocl->run(data);

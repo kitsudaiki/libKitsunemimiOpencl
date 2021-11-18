@@ -28,6 +28,8 @@
 #include <map>
 #include <string>
 
+#include <libKitsunemimiCommon/logger.h>
+
 #define __CL_ENABLE_EXCEPTIONS
 #include <CL/cl.hpp>
 
@@ -41,13 +43,14 @@ class GpuHandler
 {
 public:
     GpuHandler();
+    bool initDevice(ErrorContainer &error);
 
     std::vector<GpuInterface*> m_interfaces;
 
 private:
+    bool m_isInit = false;
     std::vector<cl::Platform> m_platform;
 
-    bool initDevice();
     void collectDevices();
 };
 

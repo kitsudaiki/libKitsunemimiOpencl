@@ -56,11 +56,13 @@ GpuInterface::~GpuInterface()
  * @brief copy data from host to device
  *
  * @param data object with all data
+ * @param error reference for error-output
  *
  * @return true, if successful, else false
  */
 bool
-GpuInterface::initCopyToDevice(GpuData &data)
+GpuInterface::initCopyToDevice(GpuData &data,
+                               ErrorContainer &error)
 {
     LOG_DEBUG("initial data transfer to OpenCL device");
 
@@ -82,10 +84,9 @@ GpuInterface::initCopyToDevice(GpuData &data)
                 || buffer->numberOfObjects == 0
                 || buffer->data == nullptr)
         {
-            ErrorContainer error;
-            error.possibleSolution = "failed to copy data to device, because buffer with name '"
-                                     + it->first
-                                     + "' has size 0 or is not initialized.";
+            error.addMeesage("failed to copy data to device, because buffer with name '"
+                             + it->first
+                             + "' has size 0 or is not initialized.");
             LOG_ERROR(error);
             return false;
         }
@@ -114,13 +115,15 @@ GpuInterface::initCopyToDevice(GpuData &data)
  * @param data object with all data
  * @param kernelName name of the kernel
  * @param kernelCode kernel source-code as string
+ * @param error reference for error-output
  *
  * @return true, if successful, else false
  */
 bool
 GpuInterface::addKernel(GpuData &data,
                         const std::string &kernelName,
-                        const std::string &kernelCode)
+                        const std::string &kernelCode,
+                        ErrorContainer &error)
 {
     LOG_DEBUG("add kernel with id: " + kernelName);
 
@@ -131,7 +134,7 @@ GpuInterface::addKernel(GpuData &data,
 
     try
     {
-        const bool buildResult = build(def);
+        const bool buildResult = build(def, error);
         if(buildResult == false) {
             return false;
         }
@@ -140,12 +143,11 @@ GpuInterface::addKernel(GpuData &data,
     }
     catch(const cl::Error &err)
     {
-        ErrorContainer error;
-        error.possibleSolution = "OpenCL error: "
-                                 + std::string(err.what())
-                                 + "("
-                                 + std::to_string(err.err())
-                                 + ")";
+        error.addMeesage("OpenCL error: "
+                         + std::string(err.what())
+                         + "("
+                         + std::to_string(err.err())
+                         + ")");
         LOG_ERROR(error);
         return false;
     }
@@ -159,21 +161,22 @@ GpuInterface::addKernel(GpuData &data,
  * @param data data-object with the buffer to bind
  * @param kernelName, name of the kernel, which should be used
  * @param bufferName name of buffer, which should be bind to the kernel
+ * @param error reference for error-output
  *
  * @return true, if successful, else false
  */
 bool
 GpuInterface::bindKernelToBuffer(GpuData &data,
                                  const std::string &kernelName,
-                                 const std::string &bufferName)
+                                 const std::string &bufferName,
+                                 ErrorContainer &error)
 {
     LOG_DEBUG("bind buffer with name '" + bufferName + "' kernel with name: '" + kernelName + "'");
 
     // get kernel-data
     if(data.containsKernel(kernelName) == false)
     {
-        ErrorContainer error;
-        error.possibleSolution = "no kernel with name '" + kernelName + "' found";
+        error.addMeesage("no kernel with name '" + kernelName + "' found");
         LOG_ERROR(error);
         return false;
     }
@@ -182,7 +185,7 @@ GpuInterface::bindKernelToBuffer(GpuData &data,
     if(data.containsBuffer(bufferName) == false)
     {
         ErrorContainer error;
-        error.possibleSolution = "no buffer with name '" + bufferName + "' found";
+        error.addMeesage("no buffer with name '" + bufferName + "' found");
         LOG_ERROR(error);
         return false;
     }
@@ -211,19 +214,20 @@ GpuInterface::bindKernelToBuffer(GpuData &data,
  * @param data object with all data
  * @param kernelName, name of the kernel, which should be executed
  * @param localMemorySize size of the local mamory
+ * @param error reference for error-output
  *
  * @return true, if successful, else false
  */
 bool
 GpuInterface::setLocalMemory(GpuData &data,
                              const std::string &kernelName,
-                             const uint32_t localMemorySize)
+                             const uint32_t localMemorySize,
+                             ErrorContainer &error)
 {
     // get kernel-data
     if(data.containsKernel(kernelName) == false)
     {
-        ErrorContainer error;
-        error.possibleSolution = "no kernel with name '" + kernelName + "' found";
+        error.addMeesage("no kernel with name '" + kernelName + "' found");
         LOG_ERROR(error);
         return false;
     }
@@ -241,6 +245,7 @@ GpuInterface::setLocalMemory(GpuData &data,
  *
  * @param data object with all data
  * @param bufferName name of the buffer in the kernel
+ * @param error reference for error-output
  * @param numberOfObjects number of objects to copy
  * @param offset offset in buffer on device
  *
@@ -249,6 +254,7 @@ GpuInterface::setLocalMemory(GpuData &data,
 bool
 GpuInterface::updateBufferOnDevice(GpuData &data,
                                    const std::string &bufferName,
+                                   ErrorContainer &error,
                                    uint64_t numberOfObjects,
                                    const uint64_t offset)
 {
@@ -258,7 +264,7 @@ GpuInterface::updateBufferOnDevice(GpuData &data,
     if(data.containsBuffer(bufferName) == false)
     {
         ErrorContainer error;
-        error.possibleSolution = "no buffer with name '" + bufferName + "' found";
+        error.addMeesage("no buffer with name '" + bufferName + "' found");
         LOG_ERROR(error);
         return false;
     }
@@ -299,12 +305,14 @@ GpuInterface::updateBufferOnDevice(GpuData &data,
  *
  * @param data input-data for the run
  * @param kernelName, name of the kernel, which should be executed
+ * @param error reference for error-output
  *
  * @return true, if successful, else false
  */
 bool
 GpuInterface::run(GpuData &data,
-                  const std::string &kernelName)
+                  const std::string &kernelName,
+                  ErrorContainer &error)
 {
     //LOG_DEBUG("run kernel on OpenCL device");
     cl::Event event;
@@ -312,7 +320,7 @@ GpuInterface::run(GpuData &data,
     events.push_back(event);
 
     // precheck
-    if(validateWorkerGroupSize(data) == false) {
+    if(validateWorkerGroupSize(data, error) == false) {
         return false;
     }
 
@@ -327,8 +335,7 @@ GpuInterface::run(GpuData &data,
     // get kernel-data
     if(data.containsKernel(kernelName) == false)
     {
-        ErrorContainer error;
-        error.possibleSolution = "no kernel with name '" + kernelName + "' found";
+        error.addMeesage("no kernel with name '" + kernelName + "' found");
         LOG_ERROR(error);
         return false;
     }
@@ -350,12 +357,11 @@ GpuInterface::run(GpuData &data,
     }
     catch(const cl::Error &err)
     {
-        ErrorContainer error;
-        error.possibleSolution = "OpenCL error: "
-                                 + std::string(err.what())
-                                 + "("
-                                 + std::to_string(err.err())
-                                 + ")";
+        error.addMeesage("OpenCL error: "
+                         + std::string(err.what())
+                         + "("
+                         + std::to_string(err.err())
+                         + ")");
         LOG_ERROR(error);
         return false;
     }
@@ -367,18 +373,20 @@ GpuInterface::run(GpuData &data,
  * @brief copy data of all as output marked buffer from device to host
  *
  * @param data object with all data
+ * @param bufferName name of the buffer to copy into
+ * @param error reference for error-output
  *
  * @return true, if successful, else false
  */
 bool
 GpuInterface::copyFromDevice(GpuData &data,
-                             const std::string &bufferName)
+                             const std::string &bufferName,
+                             ErrorContainer &error)
 {
     // check id
     if(data.containsBuffer(bufferName) == false)
     {
-        ErrorContainer error;
-        error.possibleSolution = "no buffer with name '" + bufferName + "' found";
+        error.addMeesage("no buffer with name '" + bufferName + "' found");
         LOG_ERROR(error);
         return false;
     }
@@ -554,11 +562,13 @@ GpuInterface::getMaxWorkItemDimension()
  *        defined by the device
  *
  * @param data data-object, which also contains the worker-dimensions
+ * @param error reference for error-output
  *
  * @return true, if successful, else false
  */
 bool
-GpuInterface::validateWorkerGroupSize(const GpuData &data)
+GpuInterface::validateWorkerGroupSize(const GpuData &data,
+                                      ErrorContainer &error)
 {
     const uint64_t givenSize = data.threadsPerWg.x * data.threadsPerWg.y * data.threadsPerWg.z;
     const uint64_t maxSize = getMaxWorkGroupSize();
@@ -566,11 +576,10 @@ GpuInterface::validateWorkerGroupSize(const GpuData &data)
     // checko maximum size
     if(givenSize > maxSize)
     {
-        ErrorContainer error;
-        error.possibleSolution = "Size of the work-group is too big. The maximum allowed is "
-                                 + std::to_string(maxSize)
-                                 + ", but set was a total size of "
-                                 + std::to_string(givenSize);
+        error.addMeesage("Size of the work-group is too big. The maximum allowed is "
+                         + std::to_string(maxSize)
+                         + "\n, but set was a total size of "
+                         + std::to_string(givenSize));
         LOG_ERROR(error);
         return false;
     }
@@ -580,28 +589,25 @@ GpuInterface::validateWorkerGroupSize(const GpuData &data)
     // check single dimensions
     if(data.threadsPerWg.x > maxDim.x)
     {
-        ErrorContainer error;
-        error.possibleSolution = "The x-dimension of the work-item size is only "
-                                 "allowed to have a maximum of "
-                                 + std::to_string(maxDim.x);
+        error.addMeesage("The x-dimension of the work-item size is only "
+                         "allowed to have a maximum of "
+                         + std::to_string(maxDim.x));
         LOG_ERROR(error);
         return false;
     }
     if(data.threadsPerWg.y > maxDim.y)
     {
-        ErrorContainer error;
-        error.possibleSolution = "The y-dimension of the work-item size is only "
-                                 "allowed to have a maximum of "
-                                 + std::to_string(maxDim.y);
+        error.addMeesage("The y-dimension of the work-item size is only "
+                         "allowed to have a maximum of "
+                         + std::to_string(maxDim.y));
         LOG_ERROR(error);
         return false;
     }
     if(data.threadsPerWg.z > maxDim.z)
     {
-        ErrorContainer error;
-        error.possibleSolution = "The z-dimension of the work-item size is only "
-                                 "allowed to have a maximum of "
-                                 + std::to_string(maxDim.z);
+        error.addMeesage("The z-dimension of the work-item size is only "
+                         "allowed to have a maximum of "
+                         + std::to_string(maxDim.z));
         LOG_ERROR(error);
         return false;
     }
@@ -613,11 +619,13 @@ GpuInterface::validateWorkerGroupSize(const GpuData &data)
  * @brief build kernel-code
  *
  * @param def kernel struct object with kernel-name and kernel-code
+ * @param error reference for error-output
  *
  * @return true, if successful, else false
  */
 bool
-GpuInterface::build(GpuData::KernelDef &data)
+GpuInterface::build(GpuData::KernelDef &data,
+                    ErrorContainer &error)
 {
     // compile opencl program for found device.
     const std::pair<const char*, size_t> kernelCode = std::make_pair(data.kernelCode.c_str(),
@@ -632,9 +640,8 @@ GpuInterface::build(GpuData::KernelDef &data)
     }
     catch(const cl::Error&)
     {
-        ErrorContainer error;
-        error.possibleSolution = "OpenCL compilation error\n    "
-                                 + program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_device);
+        error.addMeesage("OpenCL compilation error\n    "
+                         + program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_device));
         LOG_ERROR(error);
         return false;
     }

@@ -40,6 +40,7 @@ void
 SimpleTest::simple_test()
 {
     const size_t testSize = 1 << 20;
+    ErrorContainer error;
 
     // example kernel for task: c = a + b.
     const std::string kernelCode =
@@ -62,6 +63,7 @@ SimpleTest::simple_test()
         "}\n";
 
     Kitsunemimi::Opencl::GpuHandler oclHandler;
+    assert(oclHandler.initDevice(error));
 
     TEST_NOT_EQUAL(oclHandler.m_interfaces.size(), 0)
 
@@ -91,14 +93,14 @@ SimpleTest::simple_test()
     }
 
     // run
-    TEST_EQUAL(ocl->initCopyToDevice(data), true)
-    TEST_EQUAL(ocl->addKernel(data, "add", kernelCode), true)
-    TEST_EQUAL(ocl->bindKernelToBuffer(data, "add", "x"), true)
-    TEST_EQUAL(ocl->bindKernelToBuffer(data, "add", "y"), true)
-    TEST_EQUAL(ocl->bindKernelToBuffer(data, "add", "z"), true)
+    TEST_EQUAL(ocl->initCopyToDevice(data, error), true)
+    TEST_EQUAL(ocl->addKernel(data, "add", kernelCode, error), true)
+    TEST_EQUAL(ocl->bindKernelToBuffer(data, "add", "x", error), true)
+    TEST_EQUAL(ocl->bindKernelToBuffer(data, "add", "y", error), true)
+    TEST_EQUAL(ocl->bindKernelToBuffer(data, "add", "z", error), true)
     //TEST_EQUAL(ocl->setLocalMemory("add", 256*256), true);
-    TEST_EQUAL(ocl->run(data, "add"), true)
-    TEST_EQUAL(ocl->copyFromDevice(data, "z"), true)
+    TEST_EQUAL(ocl->run(data, "add", error), true)
+    TEST_EQUAL(ocl->copyFromDevice(data, "z", error), true)
 
     // check result
     float* outputValues = static_cast<float*>(data.getBufferData("z"));
@@ -110,12 +112,12 @@ SimpleTest::simple_test()
     }
 
     // update data on device
-    TEST_EQUAL(ocl->updateBufferOnDevice(data, "x"), true)
+    TEST_EQUAL(ocl->updateBufferOnDevice(data, "x", error), true)
 
     // second run
-    TEST_EQUAL(ocl->run(data, "add"), true)
+    TEST_EQUAL(ocl->run(data, "add", error), true)
     // copy new output back
-    TEST_EQUAL(ocl->copyFromDevice(data, "z"), true)
+    TEST_EQUAL(ocl->copyFromDevice(data, "z", error), true)
 
     // check new result
     outputValues = static_cast<float*>(data.getBufferData("z"));
