@@ -93,11 +93,10 @@ public:
     cl::Device m_device;
     cl::Context m_context;
     cl::CommandQueue m_queue;
+
 private:
     bool validateWorkerGroupSize(const GpuData &data,
                                  ErrorContainer &error);
-    bool build(GpuData::KernelDef &def,
-               ErrorContainer &error);
 };
 
 }

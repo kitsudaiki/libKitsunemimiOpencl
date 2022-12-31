@@ -63,10 +63,7 @@ GpuHandler::initDevice(ErrorContainer &error)
         LOG_DEBUG("number of OpenCL platforms: " + std::to_string(m_platform.size()));
 
         collectDevices();
-
         m_isInit = true;
-
-        return true;
     }
     catch(const cl::Error &err)
     {
@@ -78,6 +75,8 @@ GpuHandler::initDevice(ErrorContainer &error)
         LOG_ERROR(error);
         return false;
     }
+
+    return true;
 }
 
 /**
@@ -89,24 +88,18 @@ void
 GpuHandler::collectDevices()
 {
     // get available platforms
-    std::vector<cl::Platform>::const_iterator plat_it;
-    for(plat_it = m_platform.begin();
-        plat_it != m_platform.end();
-        plat_it++)
+    for(cl::Platform &platform : m_platform)
     {
         // get available devices of the selected platform
         std::vector<cl::Device> pldev;
-        plat_it->getDevices(CL_DEVICE_TYPE_ALL, &pldev);
+        platform.getDevices(CL_DEVICE_TYPE_ALL, &pldev);
         LOG_DEBUG("number of OpenCL devices: " + std::to_string(pldev.size()));
 
         // select devices within the platform
-        std::vector<cl::Device>::const_iterator dev_it;
-        for(dev_it = pldev.begin();
-            dev_it != pldev.end();
-            dev_it++)
+        for(cl::Device &device : pldev)
         {
             // check if device is available
-            if(dev_it->getInfo<CL_DEVICE_AVAILABLE>())
+            if(device.getInfo<CL_DEVICE_AVAILABLE>())
             {
                 /*if(false)
                 {
@@ -120,7 +113,7 @@ GpuHandler::collectDevices()
                     }
                 }*/
 
-                m_interfaces.push_back(new GpuInterface(*dev_it));
+                m_interfaces.push_back(new GpuInterface(device));
             }
         }
     }

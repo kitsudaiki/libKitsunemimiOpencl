@@ -66,26 +66,25 @@ GpuInterface::initCopyToDevice(GpuData &data,
 {
     LOG_DEBUG("initial data transfer to OpenCL device");
 
+    // precheck
+    if(validateWorkerGroupSize(data, error) == false) {
+        return false;
+    }
+
     // send input to device
-    std::map<std::string, GpuData::WorkerBuffer>::iterator it;
-    for(it = data.m_buffer.begin();
-        it != data.m_buffer.end();
-        it++)
+    for(auto& [name, workerBuffer] : data.m_buffer)
     {
-
-        GpuData::WorkerBuffer* buffer = &it->second;
-
         LOG_DEBUG("copy data to device: "
-                  + std::to_string(buffer->numberOfBytes)
+                  + std::to_string(workerBuffer.numberOfBytes)
                   + " Bytes");
 
         // check buffer
-        if(buffer->numberOfBytes == 0
-                || buffer->numberOfObjects == 0
-                || buffer->data == nullptr)
+        if(workerBuffer.numberOfBytes == 0
+                || workerBuffer.numberOfObjects == 0
+                || workerBuffer.data == nullptr)
         {
             error.addMeesage("failed to copy data to device, because buffer with name '"
-                             + it->first
+                             + name
                              + "' has size 0 or is not initialized.");
             LOG_ERROR(error);
             return false;
@@ -93,17 +92,17 @@ GpuInterface::initCopyToDevice(GpuData &data,
 
         // create flag for memory handling
         cl_mem_flags flags = 0;
-        if(buffer->useHostPtr) {
+        if(workerBuffer.useHostPtr) {
             flags = CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR;
         } else {
             flags = CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR;
         }
 
         // send data or reference to device
-        it->second.clBuffer = cl::Buffer(m_context,
-                                         flags,
-                                         buffer->numberOfBytes,
-                                         buffer->data);
+        workerBuffer.clBuffer = cl::Buffer(m_context,
+                                           flags,
+                                           workerBuffer.numberOfBytes,
+                                           workerBuffer.data);
     }
 
     return true;
@@ -127,30 +126,30 @@ GpuInterface::addKernel(GpuData &data,
 {
     LOG_DEBUG("add kernel with id: " + kernelName);
 
-    // TODO: check if already registerd
-    GpuData::KernelDef def;
-    def.id = kernelName;
-    def.kernelCode = kernelCode;
+    // compile opencl program for found device.
+    cl::Program::Sources source;
+    source.push_back(kernelCode);
+    cl::Program program(m_context, source);
 
     try
     {
-        const bool buildResult = build(def, error);
-        if(buildResult == false) {
-            return false;
-        }
-
-        data.m_kernel.insert(std::make_pair(kernelName, def));
+        std::vector<cl::Device> devices = {m_device};
+        program.build(devices);
     }
-    catch(const cl::Error &err)
+    catch(const cl::Error&err)
     {
-        error.addMeesage("OpenCL error: "
-                         + std::string(err.what())
-                         + "("
-                         + std::to_string(err.err())
-                         + ")");
+        error.addMeesage("OpenCL compilation error\n    "
+                         + program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_device));
         LOG_ERROR(error);
         return false;
     }
+
+    GpuData::KernelDef def;
+    def.id = kernelName;
+    def.kernelCode = kernelCode;
+    def.kernel = cl::Kernel(program, kernelName.c_str());
+
+    data.m_kernel.insert(std::make_pair(kernelName, def));
 
     return true;
 }
@@ -177,7 +176,6 @@ GpuInterface::bindKernelToBuffer(GpuData &data,
     if(data.containsKernel(kernelName) == false)
     {
         error.addMeesage("no kernel with name '" + kernelName + "' found");
-        LOG_ERROR(error);
         return false;
     }
 
@@ -186,12 +184,24 @@ GpuInterface::bindKernelToBuffer(GpuData &data,
     {
         ErrorContainer error;
         error.addMeesage("no buffer with name '" + bufferName + "' found");
-        LOG_ERROR(error);
         return false;
     }
 
+    // get kernel
     GpuData::KernelDef* def = data.getKernel(kernelName);
+    if(def == nullptr)
+    {
+        error.addMeesage("Kernel with name '" + kernelName + "' not found.");
+        return false;
+    }
+
+    // get buffer to bind to kernel
     GpuData::WorkerBuffer* buffer = &data.m_buffer[bufferName];
+    if(buffer == nullptr)
+    {
+        error.addMeesage("Buffer with name '" + bufferName + "' not found.");
+        return false;
+    }
 
     // register arguments in opencl
     const uint32_t argNumber = static_cast<uint32_t>(def->arguments.size());
@@ -258,14 +268,10 @@ GpuInterface::updateBufferOnDevice(GpuData &data,
                                    uint64_t numberOfObjects,
                                    const uint64_t offset)
 {
-    // LOG_DEBUG("update buffer on OpenCL device");
-
     // check id
     if(data.containsBuffer(bufferName) == false)
     {
-        ErrorContainer error;
         error.addMeesage("no buffer with name '" + bufferName + "' found");
-        LOG_ERROR(error);
         return false;
     }
 
@@ -278,7 +284,9 @@ GpuInterface::updateBufferOnDevice(GpuData &data,
     }
 
     // check size
-    if(offset + numberOfObjects > buffer->numberOfObjects) {
+    if(offset + numberOfObjects > buffer->numberOfObjects)
+    {
+        error.addMeesage("position invalid");
         return false;
     }
 
@@ -314,15 +322,9 @@ GpuInterface::run(GpuData &data,
                   const std::string &kernelName,
                   ErrorContainer &error)
 {
-    //LOG_DEBUG("run kernel on OpenCL device");
     cl::Event event;
     std::vector<cl::Event> events;
     events.push_back(event);
-
-    // precheck
-    if(validateWorkerGroupSize(data, error) == false) {
-        return false;
-    }
 
     // convert ranges
     const cl::NDRange globalRange = cl::NDRange(data.numberOfWg.x * data.threadsPerWg.x,
@@ -333,7 +335,8 @@ GpuInterface::run(GpuData &data,
                                                data.threadsPerWg.z);
 
     // get kernel-data
-    if(data.containsKernel(kernelName) == false)
+    GpuData::KernelDef* def = data.getKernel(kernelName);
+    if(def == nullptr)
     {
         error.addMeesage("no kernel with name '" + kernelName + "' found");
         LOG_ERROR(error);
@@ -343,7 +346,7 @@ GpuInterface::run(GpuData &data,
     try
     {
         // launch kernel on the device
-        const cl_int ret = m_queue.enqueueNDRangeKernel(data.getKernel(kernelName)->kernel,
+        const cl_int ret = m_queue.enqueueNDRangeKernel(def->kernel,
                                                         cl::NullRange,
                                                         globalRange,
                                                         localRange,
@@ -611,42 +614,6 @@ GpuInterface::validateWorkerGroupSize(const GpuData &data,
         LOG_ERROR(error);
         return false;
     }
-
-    return true;
-}
-
-/**
- * @brief build kernel-code
- *
- * @param def kernel struct object with kernel-name and kernel-code
- * @param error reference for error-output
- *
- * @return true, if successful, else false
- */
-bool
-GpuInterface::build(GpuData::KernelDef &data,
-                    ErrorContainer &error)
-{
-    // compile opencl program for found device.
-    cl::Program::Sources source;
-    source.push_back(data.kernelCode);
-    cl::Program program(m_context, source);
-
-    try
-    {
-        std::vector<cl::Device> devices = {m_device};
-        program.build(devices);
-    }
-    catch(const cl::Error&)
-    {
-        error.addMeesage("OpenCL compilation error\n    "
-                         + program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_device));
-        LOG_ERROR(error);
-        return false;
-    }
-
-    // create kernel
-    data.kernel = cl::Kernel(program, data.id.c_str());
 
     return true;
 }
