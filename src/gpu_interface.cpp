@@ -628,9 +628,8 @@ GpuInterface::build(GpuData::KernelDef &data,
                     ErrorContainer &error)
 {
     // compile opencl program for found device.
-    const std::pair<const char*, size_t> kernelCode = std::make_pair(data.kernelCode.c_str(),
-                                                                     data.kernelCode.size());
-    const cl::Program::Sources source = cl::Program::Sources(1, kernelCode);
+    cl::Program::Sources source;
+    source.push_back(data.kernelCode);
     cl::Program program(m_context, source);
 
     try

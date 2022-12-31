@@ -29,7 +29,7 @@
 #include <string>
 
 #define __CL_ENABLE_EXCEPTIONS
-#include <CL/cl.hpp>
+#include <CL/cl2.hpp>
 
 #include <libKitsunemimiOpencl/gpu_data.h>
 #include <libKitsunemimiCommon/logger.h>
