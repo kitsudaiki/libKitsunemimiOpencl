@@ -45,7 +45,7 @@ sudo apt-get install g++ qt5-qmake opencl-headers ocl-icd-opencl-dev
 
 Based on the used gpu, there is an additional package necessary:
 
-- Intel: `beignet-opencl-icd` and requirements of these packages
+- Intel: `intel-opencl-icd` and requirements of these packages
 - AMD: `opencl-amdgpu-pro-icd`, `opencl-amdgpu-pro`, `libopencl1-amdgpu-pro` and requirements of these packages
 - Nvidia: `nvidia-opencl-icd`, `nvidia-libopencl1` and requirements of these packages (not tested from my side)
 
