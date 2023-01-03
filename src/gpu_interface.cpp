@@ -209,7 +209,20 @@ GpuInterface::bindKernelToBuffer(GpuData &data,
               + bufferName
               + "' to argument number "
               + std::to_string(argNumber));
-    def->kernel.setArg(argNumber, buffer->clBuffer);
+    try
+    {
+        def->kernel.setArg(argNumber, buffer->clBuffer);
+    }
+    catch(const cl::Error&err)
+    {
+        error.addMeesage("OpenCL error while binding buffer to kernel: "
+                         + std::string(err.what())
+                         + "("
+                         + std::to_string(err.err())
+                         + ")");
+        LOG_ERROR(error);
+        return false;
+    }
 
     // register on which argument-position the buffer was binded
     def->arguments.insert(std::make_pair(bufferName, argNumber));
