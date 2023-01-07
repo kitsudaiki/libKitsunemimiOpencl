@@ -1,6 +1,6 @@
 # libKitsunemimiOpencl
 
-![Gitlab pipeline status](https://img.shields.io/gitlab/pipeline/kitsudaiki/libKitsunemimiOpencl?label=build&style=flat-square)
+![Github workfloat status](https://img.shields.io/github/actions/workflow/status/kitsudaiki/libKitsunemimiOpencl/build_test.yml?branch=develop&style=flat-square&label=build%20and%20test)
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/kitsudaiki/libKitsunemimiOpencl?label=version&style=flat-square)
 ![GitHub](https://img.shields.io/github/license/kitsudaiki/libKitsunemimiOpencl?style=flat-square)
 ![C++Version](https://img.shields.io/badge/c%2B%2B-17-blue?style=flat-square)
@@ -114,13 +114,13 @@ Kitsunemimi::ErrorContainer error;
 // in case of an error the message con be printed with LOG_ERROR(error)
 
 // init opencl-class of this library
-Kitsunemimi::Opencl::GpuHandler oclHandler;
+Kitsunemimi::GpuHandler oclHandler;
 oclHandler.initDevice(error)
 // the GpuHandler collect all devices of the host and stores them 
 // into oclHandler.m_interfaces
 
 // get for example the first device
-Kitsunemimi::Opencl::GpuInterface* ocl = oclHandler.m_interfaces.at(0);
+Kitsunemimi::GpuInterface* ocl = oclHandler.m_interfaces.at(0);
 // this ocl-object here will be used in all the following snippets
 ```
 
@@ -128,7 +128,7 @@ Prepare buffer for data-transfers between the host and the device.
 
 ```cpp
 // create data-object
-Kitsunemimi::Opencl::GpuData data;
+Kitsunemimi::GpuData data;
 
 // init empty buffer
 // This prepare a buffer-object and allocate aligned memorey on the host.

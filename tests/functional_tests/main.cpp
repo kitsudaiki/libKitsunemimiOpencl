@@ -31,5 +31,5 @@ int main()
 {
     Kitsunemimi::initConsoleLogger(true);
 
-    Kitsunemimi::Opencl::SimpleTest();
+    Kitsunemimi::SimpleTest();
 }

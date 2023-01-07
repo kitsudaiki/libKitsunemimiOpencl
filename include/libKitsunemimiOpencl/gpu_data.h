@@ -35,8 +35,6 @@
 
 namespace Kitsunemimi
 {
-namespace Opencl
-{
 class GpuInterface;
 
 struct WorkerDim
@@ -97,7 +95,6 @@ private:
                             const std::string &bufferName);
 };
 
-}
 }
 
 #endif // GPU_DATA_H

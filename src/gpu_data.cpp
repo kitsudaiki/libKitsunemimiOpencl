@@ -24,8 +24,6 @@
 
 namespace Kitsunemimi
 {
-namespace Opencl
-{
 
 GpuData::GpuData() {}
 
@@ -197,5 +195,4 @@ GpuData::getArgPosition(KernelDef* kernelDef,
     return 0;
 }
 
-}
 }

@@ -35,8 +35,6 @@
 
 namespace Kitsunemimi
 {
-namespace Opencl
-{
 class GpuInterface;
 
 class GpuHandler
@@ -54,7 +52,6 @@ private:
     void collectDevices();
 };
 
-}
 }
 
 #endif // GPU_HANDLER_H
