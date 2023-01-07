@@ -32,8 +32,6 @@
 
 namespace Kitsunemimi
 {
-namespace Opencl
-{
 
 class SimpleTest
         : public Kitsunemimi::CompareTestHelper
@@ -44,7 +42,6 @@ public:
     void simple_test();
 };
 
-}
 }
 
 #endif // TEST_RUN_H

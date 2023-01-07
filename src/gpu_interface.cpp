@@ -26,8 +26,6 @@
 
 namespace Kitsunemimi
 {
-namespace Opencl
-{
 
 /**
  * @brief constructor
@@ -231,7 +229,7 @@ GpuInterface::bindKernelToBuffer(GpuData &data,
 }
 
 /**
- * @brief Opencl::setLocalMemory
+ * @brief setLocalMemory
  *
  * @param data object with all data
  * @param kernelName, name of the kernel, which should be executed
@@ -619,5 +617,4 @@ GpuInterface::validateWorkerGroupSize(const GpuData &data,
     return true;
 }
 
-}
 }

@@ -36,8 +36,6 @@
 
 namespace Kitsunemimi
 {
-namespace Opencl
-{
 
 class GpuInterface
 {
@@ -99,7 +97,6 @@ private:
                                  ErrorContainer &error);
 };
 
-}
 }
 
 #endif // OPENCL_H

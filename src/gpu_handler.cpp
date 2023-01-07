@@ -27,8 +27,6 @@
 
 namespace Kitsunemimi
 {
-namespace Opencl
-{
 
 GpuHandler::GpuHandler() {}
 
@@ -119,5 +117,4 @@ GpuHandler::collectDevices()
     }
 }
 
-}
 }

@@ -32,8 +32,6 @@
 
 namespace Kitsunemimi
 {
-namespace Opencl
-{
 class GpuHandler;
 
 class SimpleTest
@@ -53,12 +51,11 @@ public:
 
 private:
     uint32_t m_id = 0xFFFFFFFF;
-    Kitsunemimi::Opencl::GpuHandler* m_oclHandler = nullptr;
+    Kitsunemimi::GpuHandler* m_oclHandler = nullptr;
 
     void chooseDevice();
 };
 
-}
 }
 
 #endif // TEST_RUN_H
