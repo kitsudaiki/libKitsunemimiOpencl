@@ -305,7 +305,7 @@ GpuInterface::updateBufferOnDevice(GpuData &data,
     {
         // write data into the buffer on the device
         if(m_queue.enqueueWriteBuffer(buffer->clBuffer,
-                                      CL_TRUE,
+                                      CL_FALSE,
                                       offset * objectSize,
                                       numberOfObjects * objectSize,
                                       buffer->data) != CL_SUCCESS)
@@ -355,17 +355,17 @@ GpuInterface::run(GpuData &data,
     try
     {
         // launch kernel on the device
-        if(m_queue.enqueueNDRangeKernel(def->kernel,
-                                        cl::NullRange,
-                                        globalRange,
-                                        localRange,
-                                        NULL,
-                                        &events[0]) != CL_SUCCESS)
+        const uint32_t ret = m_queue.enqueueNDRangeKernel(def->kernel,
+                                                          cl::NullRange,
+                                                          globalRange,
+                                                          localRange,
+                                                          NULL,
+                                                          &events[0]);
+        if(ret != CL_SUCCESS)
         {
+            error.addMeesage("GPU-kernel failed with return-value: " + std::to_string(ret));
             return false;
         }
-
-        cl::WaitForEvents(events);
     }
     catch(const cl::Error &err)
     {
